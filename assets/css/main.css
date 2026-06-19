@@ -1,0 +1,67 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* Our Village brand theme — tokens taken from the live site (sage + cream + soft pink) */
+@plugin "daisyui/theme" {
+  name: "ourvillage";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-primary: #a9b791;        /* sage green */
+  --color-primary-content: #20281a;
+  --color-secondary: #6a7971;      /* muted teal-green */
+  --color-secondary-content: #ffffff;
+  --color-accent: #ffbae2;         /* soft pink */
+  --color-accent-content: #5c2a47;
+  --color-neutral: #5c5f5e;        /* charcoal */
+  --color-neutral-content: #f5f6f0;
+
+  --color-base-100: #ffffff;
+  --color-base-200: #f4f5ee;       /* light cream-sage */
+  --color-base-300: #dbdcd0;       /* light sage surface */
+  --color-base-content: #2b2d2c;
+
+  --color-info: #6aa0c9;
+  --color-info-content: #ffffff;
+  --color-success: #5d8253;
+  --color-success-content: #ffffff;
+  --color-warning: #d8a23a;
+  --color-warning-content: #20281a;
+  --color-error: #c0573f;
+  --color-error-content: #ffffff;
+
+  --radius-selector: 1rem;
+  --radius-field: 0.625rem;
+  --radius-box: 1.25rem;
+  --border: 1px;
+}
+
+/* Custom Tailwind theme tokens (fonts) */
+@theme {
+  --font-display: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
+
+@utility container-px {
+  @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+}
+@utility section-y {
+  @apply py-16 sm:py-24;
+}
+@utility eyebrow {
+  @apply text-sm font-semibold uppercase tracking-[0.2em] text-primary;
+}

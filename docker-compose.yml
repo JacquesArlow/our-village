@@ -1,0 +1,17 @@
+services:
+  web:
+    build: .
+    image: ourvillage-web:latest
+    container_name: ourvillage-web
+    restart: unless-stopped
+    # Bind to localhost only; the host nginx reverse-proxies to this port.
+    ports:
+      - "127.0.0.1:8090:3000"
+    environment:
+      - NODE_ENV=production
+      - NITRO_HOST=0.0.0.0
+      - NITRO_PORT=3000
+      # WhatsApp — set the real wa.me number (27XXXXXXXXX) here.
+      # The link builder appends ?text= automatically.
+      - NUXT_PUBLIC_WHATSAPP_NUMBER=27798279327
+      - NUXT_PUBLIC_WHATSAPP_DEFAULT_TEXT=Hi Our Village, I'd like to book an appointment.
