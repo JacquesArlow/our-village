@@ -8,6 +8,8 @@ export interface SiteConfig {
   address: string
   mapsUrl: string
   socials: { facebook: string; instagram: string; youtube: string }
+  buildSha: string
+  buildTime: string
 }
 
 const DEFAULT_SITE: SiteConfig = {
@@ -23,14 +25,18 @@ const DEFAULT_SITE: SiteConfig = {
     facebook: 'https://www.facebook.com/profile.php?id=61555393723146',
     instagram: 'https://www.instagram.com/our_village_pretoria/',
     youtube: 'https://www.youtube.com/@BCFTheVillage'
-  }
+  },
+  buildSha: 'dev',
+  buildTime: ''
 }
 
 export const useSite = (): SiteConfig => {
   const cfg = useRuntimeConfig().public
   return {
     ...DEFAULT_SITE,
-    whatsapp: (cfg.whatsappNumber as string) || DEFAULT_SITE.whatsapp
+    whatsapp: (cfg.whatsappNumber as string) || DEFAULT_SITE.whatsapp,
+    buildSha: (cfg.buildSha as string) || 'dev',
+    buildTime: (cfg.buildTime as string) || ''
   }
 }
 

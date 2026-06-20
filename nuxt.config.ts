@@ -17,7 +17,11 @@ export default defineNuxtConfig({
       // below is the temporary number — swap when Jacques sends the real one.
       whatsappNumber: '27798279327',
       whatsappDefaultText: "Hi Our Village, I'd like to book an appointment.",
-      siteUrl: 'https://our-wellness.arlow.co.za'
+      siteUrl: 'https://our-wellness.arlow.co.za',
+      // Build stamp — injected by CI from $GITHUB_SHA / $BUILD_TIME
+      // so the footer can show which commit is live.
+      buildSha: '',
+      buildTime: ''
     }
   },
   app: {

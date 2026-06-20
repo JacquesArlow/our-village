@@ -53,7 +53,14 @@ const year = 2026
     <div class="border-t border-white/10">
       <div class="container-px flex flex-col items-center justify-between gap-2 py-5 text-xs text-secondary-content/70 sm:flex-row">
         <p>© {{ year }} Our Village. All rights reserved.</p>
-        <p>Previously BCF The Village.</p>
+        <p class="flex items-center gap-2">
+          <span>Previously BCF The Village.</span>
+          <span
+            v-if="site.buildSha"
+            class="rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] tracking-wider"
+            :title="site.buildTime"
+          >build {{ site.buildSha }}</span>
+        </p>
       </div>
     </div>
   </footer>

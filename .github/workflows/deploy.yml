@@ -1,0 +1,77 @@
+name: deploy
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel any in-flight deploy for the same branch
+concurrency:
+  group: deploy-our-wellness-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cloud:
+    name: Build & deploy to cloud
+    runs-on: [self-hosted, cloud]
+    timeout-minutes: 15
+    steps:
+      - name: Verify runner identity
+        run: |
+          echo "Runner: $(hostname)"
+          echo "IP: $(hostname -I | awk '{print $1}')"
+          [[ "$(hostname -I | awk '{print $1}')" == "20.0.2.104" ]] || { echo "wrong host"; exit 1; }
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Stamp build
+        run: |
+          echo "BUILD_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+          echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
+
+      - name: Build & restart container
+        working-directory: /opt/our-wellness
+        env:
+          NUXT_PUBLIC_BUILD_SHA: ${{ env.BUILD_SHA }}
+          NUXT_PUBLIC_BUILD_TIME: ${{ env.BUILD_TIME }}
+          NUXT_PUBLIC_WHATSAPP_NUMBER: ${{ secrets.NUXT_PUBLIC_WHATSAPP_NUMBER }}
+          NUXT_PUBLIC_WHATSAPP_DEFAULT_TEXT: ${{ secrets.NUXT_PUBLIC_WHATSAPP_DEFAULT_TEXT }}
+        run: |
+          # Pull latest
+          git pull --ff-only
+          # Build with the build-stamp env vars baked in
+          NUXT_PUBLIC_BUILD_SHA="${{ env.BUILD_SHA }}" \
+            NUXT_PUBLIC_BUILD_TIME="${{ env.BUILD_TIME }}" \
+            docker compose -f docker-compose.yml build --pull
+          # Recreate the container (restart alone won't re-read env)
+          NUXT_PUBLIC_BUILD_SHA="${{ env.BUILD_SHA }}" \
+            NUXT_PUBLIC_BUILD_TIME="${{ env.BUILD_TIME }}" \
+            docker compose -f docker-compose.yml up -d --force-recreate --remove-orphans
+          # Clean up old images
+          docker image prune -f
+
+      - name: Health check
+        run: |
+          for i in $(seq 1 20); do
+            if curl -fsS -o /dev/null -w "%{http_code}" http://127.0.0.1:8090/ 2>/dev/null | grep -q 200; then
+              echo "site is up on :8090"
+              # Also confirm the new build stamp is being served
+              SHA=$(curl -fsS http://127.0.0.1:8090/ | grep -oE "build [a-f0-9]{7}" | head -1)
+              echo "Live stamp: $SHA  (expected: build ${{ env.BUILD_SHA }})"
+              if [[ "$SHA" == "build ${{ env.BUILD_SHA }}" ]]; then
+                echo "✓ build stamp matches"; exit 0
+              else
+                echo "✗ build stamp mismatch — newer container may be starting"
+                # give it one more try
+                sleep 3
+                SHA=$(curl -fsS http://127.0.0.1:8090/ | grep -oE "build [a-f0-9]{7}" | head -1)
+                if [[ "$SHA" == "build ${{ env.BUILD_SHA }}" ]]; then exit 0; fi
+                exit 1
+              fi
+            fi
+            sleep 2
+          done
+          echo "service did not come up in time"
+          docker compose -f /opt/our-wellness/docker-compose.yml logs --tail=50 web
+          exit 1
