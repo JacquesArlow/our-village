@@ -7,6 +7,7 @@ const links = [
   { label: 'Home', to: '/' },
   { label: 'Our Services', to: '/our-services' },
   { label: 'Our Team', to: '/our-team' },
+  { label: 'Calendar', to: '/calendar' },
   { label: 'Antenatal Classes', to: '/antenatal-classes' },
   { label: 'Contact', to: '/contact-us' }
 ]
