@@ -3,11 +3,11 @@ import type { EventRow, BlockRow } from '~~/shared/calendar'
 const now = new Date()
 const year = ref(now.getFullYear())
 const month = ref(now.getMonth() + 1)
-const { data, refresh } = await useFetch<{ events: EventRow[]; blocks: BlockRow[] }>('/api/calendar/month', {
+const { data } = await useFetch<{ events: EventRow[]; blocks: BlockRow[] }>('/api/calendar/month', {
   query: { year, month }
 })
-function prev() { if (month.value === 1) { month.value = 12; year.value-- } else month.value--; refresh() }
-function next() { if (month.value === 12) { month.value = 1; year.value++ } else month.value++; refresh() }
+function prev() { if (month.value === 1) { month.value = 12; year.value-- } else month.value-- }
+function next() { if (month.value === 12) { month.value = 1; year.value++ } else month.value++ }
 const training = computed(() => (data.value?.blocks ?? []).filter(b => b.section === 'training'))
 useHead({ title: 'Calendar — Our Village' })
 </script>
