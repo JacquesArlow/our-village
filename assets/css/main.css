@@ -41,6 +41,7 @@
 @theme {
   --font-display: "Montserrat", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  --font-script: "Pinyon Script", "Segoe Script", cursive;
 }
 
 @layer base {
@@ -65,3 +66,5 @@
 @utility eyebrow {
   @apply text-sm font-semibold uppercase tracking-[0.2em] text-primary;
 }
+@utility font-script { font-family: var(--font-script); }
+@utility cal-daylabel { @apply text-center font-display font-bold tracking-[0.25em] text-base-content/80 uppercase; }
