@@ -50,4 +50,32 @@ describe('calendarRepo', () => {
     const list = await listEvents({ publicOnly: true })
     expect(list.map(e => e.title)).toEqual(['New', 'Old'])
   })
+
+  it('public projection strips staff and timestamps; admin path retains them', async () => {
+    await createEvent({ startDate: '2026-06-10', title: 'Staffed event', isPublic: true, staff: 'Megan' })
+
+    // publicOnly: true — staff must be absent
+    const pub = await getMonth(2026, 6, { publicOnly: true })
+    expect(pub.events).toHaveLength(1)
+    expect('staff' in pub.events[0]).toBe(false)
+    expect('createdAt' in pub.events[0]).toBe(false)
+    expect('updatedAt' in pub.events[0]).toBe(false)
+
+    // admin (no publicOnly) — staff must be present with correct value
+    const admin = await getMonth(2026, 6)
+    expect(admin.events).toHaveLength(1)
+    expect('staff' in admin.events[0]).toBe(true)
+    expect(admin.events[0].staff).toBe('Megan')
+
+    // listEvents publicOnly — staff must be absent
+    const pubList = await listEvents({ publicOnly: true })
+    expect(pubList).toHaveLength(1)
+    expect('staff' in pubList[0]).toBe(false)
+
+    // listEvents admin — staff must be present
+    const adminList = await listEvents()
+    expect(adminList).toHaveLength(1)
+    expect('staff' in adminList[0]).toBe(true)
+    expect(adminList[0].staff).toBe('Megan')
+  })
 })

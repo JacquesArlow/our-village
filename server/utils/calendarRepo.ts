@@ -1,11 +1,16 @@
 import { and, eq, lte, desc } from 'drizzle-orm'
 import { db } from '~~/server/db/client'
 import { event, monthBlock } from '~~/server/db/schema'
-import type { EventInsert, MonthBlockInsert } from '~~/server/db/schema'
+import type { EventInsert, MonthBlockInsert, EventSelect } from '~~/server/db/schema'
 import { monthRange } from '~~/shared/calendar'
 
 const now = () => Date.now()
 const id = () => crypto.randomUUID()
+
+function toPublicEvent(e: EventSelect) {
+  const { staff, createdAt, updatedAt, ...pub } = e
+  return pub
+}
 
 export async function getMonth(year: number, month: number, opts: { publicOnly?: boolean } = {}) {
   const { start, end } = monthRange(year, month)
@@ -13,10 +18,11 @@ export async function getMonth(year: number, month: number, opts: { publicOnly?:
   // Coarse SQL filter: startDate <= monthEnd (captures events that started before or during the month).
   // Then JS-filter for overlap: (endDate ?? startDate) >= monthStart.
   const rows = await db.select().from(event).where(lte(event.startDate, end))
-  const events = rows
+  const filtered = rows
     .filter(e => (e.endDate ?? e.startDate) >= start)
     .filter(e => (opts.publicOnly ? e.isPublic : true))
     .sort((a, b) => a.startDate.localeCompare(b.startDate))
+  const events = opts.publicOnly ? filtered.map(toPublicEvent) : filtered
 
   const blockRows = await db.select().from(monthBlock)
     .where(and(eq(monthBlock.year, year), eq(monthBlock.month, month)))
@@ -29,7 +35,8 @@ export async function getMonth(year: number, month: number, opts: { publicOnly?:
 
 export async function listEvents(opts: { publicOnly?: boolean } = {}) {
   const rows = await db.select().from(event).orderBy(desc(event.startDate))
-  return opts.publicOnly ? rows.filter(e => e.isPublic) : rows
+  const filtered = opts.publicOnly ? rows.filter(e => e.isPublic) : rows
+  return opts.publicOnly ? filtered.map(toPublicEvent) : filtered
 }
 
 export async function createEvent(input: Partial<EventInsert> & { startDate: string; title: string }) {

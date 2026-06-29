@@ -2,6 +2,10 @@ import { runMigrations } from '~~/server/db/migrate'
 import { auth } from '~~/lib/auth'
 
 export default defineNitroPlugin(async () => {
+  if (process.env.NODE_ENV === 'production' && !process.env.BETTER_AUTH_SECRET) {
+    throw new Error('[startup] BETTER_AUTH_SECRET is required in production')
+  }
+
   await runMigrations()
 
   const email = process.env.ADMIN_SEED_EMAIL
