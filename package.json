@@ -7,14 +7,25 @@
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx server/db/migrate.ts"
   },
   "devDependencies": {
-    "nuxt": "^3.14.1592"
+    "@nuxt/test-utils": "^4.0.3",
+    "drizzle-kit": "^0.31.10",
+    "happy-dom": "^20.10.6",
+    "nuxt": "^3.14.1592",
+    "tsx": "^4.22.4",
+    "vitest": "^4.1.9"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.4",
     "@tailwindcss/vite": "^4.3.1",
     "daisyui": "^5.5.23",
+    "drizzle-orm": "^0.45.2",
     "tailwindcss": "^4.3.1"
   }
 }
