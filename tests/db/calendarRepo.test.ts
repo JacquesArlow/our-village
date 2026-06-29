@@ -13,7 +13,7 @@ vi.mock('~~/server/db/client', () => ({
 }))
 
 import * as schema from '~~/server/db/schema'
-import { getMonth, listEvents, createEvent } from '~~/server/utils/calendarRepo'
+import { getMonth, listEvents, createEvent, createBlock } from '~~/server/utils/calendarRepo'
 
 beforeEach(async () => {
   const client = createClient({ url: 'file::memory:' })
@@ -26,10 +26,16 @@ describe('calendarRepo', () => {
   it('getMonth returns only public events when publicOnly', async () => {
     await createEvent({ startDate: '2026-06-05', title: 'Public day', isPublic: true })
     await createEvent({ startDate: '2026-06-06', title: 'Private day', isPublic: false })
+    await createBlock({ year: 2026, month: 6, section: 'important_dates', text: 'Public block', isPublic: true })
+    await createBlock({ year: 2026, month: 6, section: 'important_dates', text: 'Private block', isPublic: false })
+
     const pub = await getMonth(2026, 6, { publicOnly: true })
     expect(pub.events.map(e => e.title)).toEqual(['Public day'])
+    expect(pub.blocks.map(b => b.text)).toEqual(['Public block'])
+
     const all = await getMonth(2026, 6)
     expect(all.events).toHaveLength(2)
+    expect(all.blocks).toHaveLength(2)
   })
 
   it('getMonth includes events whose range overlaps the month', async () => {
