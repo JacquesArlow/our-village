@@ -22,6 +22,6 @@ useHead({ title: 'Village Desk' })
         <button class="btn btn-primary w-full" type="submit">Sign in</button>
       </form>
     </div>
-    <div v-else class="p-8">Signed in. Planner coming in Task 8. <button class="btn" @click="authClient.signOut().then(refreshNuxtData)">Sign out</button></div>
+    <div v-else><AdminPlanner @signout="authClient.signOut().then(refreshNuxtData)" /></div>
   </div>
 </template>
