@@ -28,8 +28,8 @@ useHead({ title: `Edit ${date} — Village Desk` })
     </ul>
     <div class="mt-4">
       <button v-if="!adding && !editing" class="btn btn-primary btn-sm" @click="adding = true">+ Add event</button>
-      <EventEditForm v-if="adding" :date="date" @saved="onSaved" @cancel="adding=false" />
-      <EventEditForm v-if="editing" :date="date" :model="editing" @saved="onSaved" @cancel="editing=null" />
+      <CalendarEventEditForm v-if="adding" :date="date" @saved="onSaved" @cancel="adding=false" />
+      <CalendarEventEditForm v-if="editing" :date="date" :model="editing" @saved="onSaved" @cancel="editing=null" />
     </div>
   </div>
 </template>

@@ -24,7 +24,7 @@ function openDay(date: string) { navigateTo(`/village-desk/day/${date}`) }
         <CalendarGrid :year="year" :month="month" :events="data?.events ?? []" editable @day-click="openDay" />
       </div>
       <div class="space-y-4">
-        <BlockListEditor v-for="s in sections" :key="s" :year="year" :month="month" :section="s" :items="grouped[s]" @changed="refresh" />
+        <CalendarBlockListEditor v-for="s in sections" :key="s" :year="year" :month="month" :section="s" :items="grouped[s]" @changed="refresh" />
       </div>
     </div>
   </div>
