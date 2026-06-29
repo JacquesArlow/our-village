@@ -1,12 +1,13 @@
 services:
   web:
     build: .
-    image: ourvillage-web:latest
-    container_name: ourvillage-web
+    image: ${IMAGE_NAME:-ourvillage-web}:latest
+    container_name: ${CONTAINER_NAME:-ourvillage-web}
     restart: unless-stopped
     # Bind to localhost only; the host nginx reverse-proxies to this port.
+    # HOST_PORT defaults to 8090 (prod-preview); staging deploy overrides to 8093.
     ports:
-      - "127.0.0.1:8090:3000"
+      - "127.0.0.1:${HOST_PORT:-8090}:3000"
     environment:
       - NODE_ENV=production
       - NITRO_HOST=0.0.0.0

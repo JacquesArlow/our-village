@@ -1,0 +1,57 @@
+name: Deploy
+
+# Staging only for now. Production (main) will be wired later.
+on:
+  push:
+    branches: [staging]
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, our-village]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve target environment
+        id: env
+        run: |
+          # Only the staging branch triggers this workflow today, so the target
+          # is fixed to staging. When production is wired, branch on github.ref
+          # here (main -> production /opt/ourvillage-web, port 8090).
+          echo "name=staging"                       >> "$GITHUB_OUTPUT"
+          echo "dir=/opt/ourvillage-web-staging"    >> "$GITHUB_OUTPUT"
+          echo "project=ourvillage-web-staging"     >> "$GITHUB_OUTPUT"
+          echo "container=ourvillage-web-staging"   >> "$GITHUB_OUTPUT"
+          echo "image=ourvillage-web-staging"       >> "$GITHUB_OUTPUT"
+          echo "port=8093"                          >> "$GITHUB_OUTPUT"
+
+      - name: Sync source to server
+        run: |
+          mkdir -p "${{ steps.env.outputs.dir }}"
+          rsync -av --delete \
+            --exclude='node_modules' \
+            --exclude='.output' \
+            --exclude='.nuxt' \
+            --exclude='.cache' \
+            --exclude='.git' \
+            "$GITHUB_WORKSPACE/" "${{ steps.env.outputs.dir }}/"
+
+      - name: Build and restart container
+        run: |
+          cd "${{ steps.env.outputs.dir }}"
+          export IMAGE_NAME="${{ steps.env.outputs.image }}"
+          export CONTAINER_NAME="${{ steps.env.outputs.container }}"
+          export HOST_PORT="${{ steps.env.outputs.port }}"
+          docker compose -p "${{ steps.env.outputs.project }}" build --no-cache
+          docker compose -p "${{ steps.env.outputs.project }}" down
+          docker compose -p "${{ steps.env.outputs.project }}" up -d
+
+      - name: Health check
+        run: |
+          sleep 5
+          if curl -sf -o /dev/null "http://127.0.0.1:${{ steps.env.outputs.port }}"; then
+            echo "✅ ${{ steps.env.outputs.name }} container is up on port ${{ steps.env.outputs.port }}"
+          else
+            echo "❌ ${{ steps.env.outputs.name }} health check failed on port ${{ steps.env.outputs.port }}"
+            docker compose -p "${{ steps.env.outputs.project }}" logs --tail=50 || true
+            exit 1
+          fi
