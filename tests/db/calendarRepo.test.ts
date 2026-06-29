@@ -1,0 +1,47 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { createClient } from '@libsql/client'
+import { drizzle } from 'drizzle-orm/libsql'
+import { migrate } from 'drizzle-orm/libsql/migrator'
+
+// In vitest 4, vi.mock factories are hoisted above imports.
+// Use vi.hoisted() to create variables that the factory can close over.
+const dbRef = vi.hoisted(() => ({ current: null as any }))
+
+vi.mock('~~/server/db/client', () => ({
+  get db() { return dbRef.current },
+  schema: {}
+}))
+
+import * as schema from '~~/server/db/schema'
+import { getMonth, listEvents, createEvent } from '~~/server/utils/calendarRepo'
+
+beforeEach(async () => {
+  const client = createClient({ url: 'file::memory:' })
+  const freshDb = drizzle(client, { schema })
+  await migrate(freshDb, { migrationsFolder: './server/db/migrations' })
+  dbRef.current = freshDb
+})
+
+describe('calendarRepo', () => {
+  it('getMonth returns only public events when publicOnly', async () => {
+    await createEvent({ startDate: '2026-06-05', title: 'Public day', isPublic: true })
+    await createEvent({ startDate: '2026-06-06', title: 'Private day', isPublic: false })
+    const pub = await getMonth(2026, 6, { publicOnly: true })
+    expect(pub.events.map(e => e.title)).toEqual(['Public day'])
+    const all = await getMonth(2026, 6)
+    expect(all.events).toHaveLength(2)
+  })
+
+  it('getMonth includes events whose range overlaps the month', async () => {
+    await createEvent({ startDate: '2026-05-30', endDate: '2026-06-02', title: 'Spanning week', isPublic: true })
+    const june = await getMonth(2026, 6, { publicOnly: true })
+    expect(june.events.map(e => e.title)).toContain('Spanning week')
+  })
+
+  it('listEvents orders newest first', async () => {
+    await createEvent({ startDate: '2026-01-01', title: 'Old', isPublic: true })
+    await createEvent({ startDate: '2026-06-01', title: 'New', isPublic: true })
+    const list = await listEvents({ publicOnly: true })
+    expect(list.map(e => e.title)).toEqual(['New', 'Old'])
+  })
+})
