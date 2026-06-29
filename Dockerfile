@@ -20,6 +20,9 @@ ENV NITRO_PORT=3000
 
 # Only the built server output is needed at runtime
 COPY --from=build /app/.output ./.output
+# Drizzle migration SQL + journal are assets (not bundled by Nitro); the
+# startup plugin applies them from ./server/db/migrations at boot.
+COPY --from=build /app/server/db/migrations ./server/db/migrations
 
 EXPOSE 3000
 CMD ["node", ".output/server/index.mjs"]

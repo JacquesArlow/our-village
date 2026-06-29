@@ -12,7 +12,21 @@ services:
       - NODE_ENV=production
       - NITRO_HOST=0.0.0.0
       - NITRO_PORT=3000
+      # SQLite (libSQL) lives on the mounted volume so it survives rebuilds.
+      - DATABASE_URL=file:/data/ourvillage.db
+      # Auth + admin seed are supplied via the host .env file (never committed).
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-https://staging.our-village.co.za}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - ADMIN_SEED_EMAIL=${ADMIN_SEED_EMAIL}
+      - ADMIN_SEED_PASSWORD=${ADMIN_SEED_PASSWORD}
       # WhatsApp — set the real wa.me number (27XXXXXXXXX) here.
       # The link builder appends ?text= automatically.
       - NUXT_PUBLIC_WHATSAPP_NUMBER=27798279327
       - NUXT_PUBLIC_WHATSAPP_DEFAULT_TEXT=Hi Our Village, I'd like to book an appointment.
+    volumes:
+      # Named volume is prefixed by the compose project, so staging and
+      # prod-preview get separate databases automatically.
+      - ourvillage_data:/data
+
+volumes:
+  ourvillage_data:
