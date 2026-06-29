@@ -9,7 +9,7 @@ const { data, refresh } = await useFetch<{ events: EventRow[]; blocks: BlockRow[
 const dayEvents = computed(() => eventsForDay(data.value?.events ?? [], date))
 const editing = ref<EventRow | null>(null)
 const adding = ref(false)
-async function del(e: EventRow) { await $fetch('/api/admin/event', { method:'DELETE', body:{ id:e.id } }); refresh() }
+async function del(e: EventRow) { if (!confirm('Delete this event?')) return; await $fetch('/api/admin/event', { method:'DELETE', body:{ id:e.id } }); refresh() }
 function onSaved() { editing.value=null; adding.value=false; refresh() }
 useHead({ title: `Edit ${date} — Village Desk` })
 </script>

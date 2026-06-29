@@ -10,11 +10,17 @@ const f = reactive({
   color: props.model?.color ?? 'default', isHighlight: props.model?.isHighlight ?? false,
   isPublic: props.model?.isPublic ?? false
 })
+const err = ref('')
 async function save() {
-  const body = { ...f, endDate: f.endDate || null }
-  if (f.id) await $fetch('/api/admin/event', { method: 'PATCH', body })
-  else await $fetch('/api/admin/event', { method: 'POST', body })
-  emit('saved')
+  err.value = ''
+  try {
+    const body = { ...f, endDate: f.endDate || null }
+    if (f.id) await $fetch('/api/admin/event', { method: 'PATCH', body })
+    else await $fetch('/api/admin/event', { method: 'POST', body })
+    emit('saved')
+  } catch (e: any) {
+    err.value = e?.data?.message || e?.message || 'Save failed'
+  }
 }
 </script>
 <template>
@@ -31,6 +37,7 @@ async function save() {
       <label class="flex items-center gap-2 text-sm"><input v-model="f.isHighlight" type="checkbox" class="checkbox checkbox-sm" /> Highlight dot</label>
       <label class="flex items-center gap-2 text-sm"><input v-model="f.isPublic" type="checkbox" class="toggle toggle-primary toggle-sm" /> Show on public site</label>
     </div>
+    <p v-if="err" class="text-sm text-error">{{ err }}</p>
     <div class="flex gap-2">
       <button class="btn btn-primary btn-sm" type="submit">Save</button>
       <button class="btn btn-ghost btn-sm" type="button" @click="$emit('cancel')">Cancel</button>
