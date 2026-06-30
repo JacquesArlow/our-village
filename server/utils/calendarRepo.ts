@@ -39,6 +39,14 @@ export async function listEvents(opts: { publicOnly?: boolean } = {}) {
   return opts.publicOnly ? filtered.map(toPublicEvent) : filtered
 }
 
+/** A single event by id, public-projected — only returned if it is published. */
+export async function getPublicEvent(eventId: string) {
+  const rows = await db.select().from(event).where(eq(event.id, eventId))
+  const row = rows[0]
+  if (!row || !row.isPublic) return null
+  return toPublicEvent(row)
+}
+
 export async function createEvent(input: Partial<EventInsert> & { startDate: string; title: string }) {
   const row: EventInsert = {
     id: id(),

@@ -9,6 +9,8 @@ const { data, refresh } = await useFetch<{ events: EventRow[]; blocks: BlockRow[
 const dayEvents = computed(() => eventsForDay(data.value?.events ?? [], date))
 const editing = ref<EventRow | null>(null)
 const adding = ref(false)
+const qrFor = ref<string | null>(null)
+function toggleQr(e: EventRow) { qrFor.value = qrFor.value === e.id ? null : e.id }
 const pretty = new Date(date + 'T00:00:00').toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 async function del(e: EventRow) { if (!confirm('Delete this event?')) return; await $fetch('/api/admin/event', { method: 'DELETE', body: { id: e.id } }); refresh() }
 function onSaved() { editing.value = null; adding.value = false; refresh() }
@@ -30,15 +32,21 @@ useHead({ title: `${pretty} — Village Desk` })
       <h1 class="font-script text-5xl leading-tight text-secondary">{{ pretty }}</h1>
 
       <ul class="mt-6 space-y-2">
-        <li v-for="e in dayEvents" :key="e.id" class="flex items-center gap-3 rounded-box border border-base-300 bg-base-100 p-3">
-          <span class="h-2.5 w-2.5 shrink-0 rounded-full" :class="{ 'bg-primary': e.color==='sage', 'bg-accent': e.color==='pink', 'bg-error': e.color==='red', 'bg-base-300': e.color==='default' }"></span>
-          <span class="min-w-0 flex-1">
-            <span class="font-semibold" :class="colorClass(e.color)">{{ e.title }}</span>
-            <span v-if="!e.isPublic" class="ml-2 rounded-full bg-base-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-base-content/45">private</span>
-            <span v-if="e.detail" class="block text-sm text-base-content/60">{{ e.detail }}</span>
-          </span>
-          <button class="btn btn-ghost btn-xs" @click="startEdit(e)">Edit</button>
-          <button class="btn btn-ghost btn-xs text-error" @click="del(e)">Delete</button>
+        <li v-for="e in dayEvents" :key="e.id" class="rounded-box border border-base-300 bg-base-100 p-3">
+          <div class="flex items-center gap-3">
+            <span class="h-2.5 w-2.5 shrink-0 rounded-full" :class="{ 'bg-primary': e.color==='sage', 'bg-accent': e.color==='pink', 'bg-error': e.color==='red', 'bg-base-300': e.color==='default' }"></span>
+            <span class="min-w-0 flex-1">
+              <span class="font-semibold" :class="colorClass(e.color)">{{ e.title }}</span>
+              <span v-if="!e.isPublic" class="ml-2 rounded-full bg-base-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-base-content/45">private</span>
+              <span v-if="e.detail" class="block text-sm text-base-content/60">{{ e.detail }}</span>
+            </span>
+            <button class="btn btn-ghost btn-xs" :class="qrFor === e.id ? 'text-secondary' : ''" @click="toggleQr(e)">QR</button>
+            <button class="btn btn-ghost btn-xs" @click="startEdit(e)">Edit</button>
+            <button class="btn btn-ghost btn-xs text-error" @click="del(e)">Delete</button>
+          </div>
+          <div v-if="qrFor === e.id" class="mt-3">
+            <CalendarEventQr :event="e" />
+          </div>
         </li>
         <li v-if="!dayEvents.length && !adding" class="rounded-box border border-dashed border-base-300 px-4 py-6 text-center text-sm text-base-content/45">
           No events on this day yet.
