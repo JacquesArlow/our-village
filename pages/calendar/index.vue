@@ -15,7 +15,7 @@ useHead({ title: 'Calendar — Our Village' })
   <section class="container-px section-y">
     <div class="mb-6 flex items-center justify-between">
       <img src="/logo.png" alt="Our Village" class="h-12 w-auto" />
-      <CalendarMonthNav :year="year" :month="month" @prev="prev" @next="next" />
+      <CalendarMonthNav :year="year" :month="month" @prev="prev" @next="next" @update:year="year = $event" @update:month="month = $event" />
       <NuxtLink to="/calendar/events" class="btn btn-ghost btn-sm">All events ›</NuxtLink>
     </div>
     <p v-if="training.length" class="mb-3 text-sm font-semibold text-error">
