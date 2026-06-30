@@ -11,6 +11,8 @@ const editing = ref<EventRow | null>(null)
 const adding = ref(false)
 const qrFor = ref<string | null>(null)
 function toggleQr(e: EventRow) { qrFor.value = qrFor.value === e.id ? null : e.id }
+const bookingsFor = ref<string | null>(null)
+function toggleBookings(e: EventRow) { bookingsFor.value = bookingsFor.value === e.id ? null : e.id }
 const pretty = new Date(date + 'T00:00:00').toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 async function del(e: EventRow) { if (!confirm('Delete this event?')) return; await $fetch('/api/admin/event', { method: 'DELETE', body: { id: e.id } }); refresh() }
 function onSaved() { editing.value = null; adding.value = false; refresh() }
@@ -40,9 +42,13 @@ useHead({ title: `${pretty} — Village Desk` })
               <span v-if="!e.isPublic" class="ml-2 rounded-full bg-base-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-base-content/45">private</span>
               <span v-if="e.detail" class="block text-sm text-base-content/60">{{ e.detail }}</span>
             </span>
+            <button class="btn btn-ghost btn-xs" :class="bookingsFor === e.id ? 'text-secondary' : ''" @click="toggleBookings(e)">Bookings</button>
             <button class="btn btn-ghost btn-xs" :class="qrFor === e.id ? 'text-secondary' : ''" @click="toggleQr(e)">QR</button>
             <button class="btn btn-ghost btn-xs" @click="startEdit(e)">Edit</button>
             <button class="btn btn-ghost btn-xs text-error" @click="del(e)">Delete</button>
+          </div>
+          <div v-if="bookingsFor === e.id" class="mt-3">
+            <CalendarBookingsTable :event-id="e.id" />
           </div>
           <div v-if="qrFor === e.id" class="mt-3">
             <CalendarEventQr :event="e" />

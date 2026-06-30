@@ -19,6 +19,8 @@ services:
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - ADMIN_SEED_EMAIL=${ADMIN_SEED_EMAIL}
       - ADMIN_SEED_PASSWORD=${ADMIN_SEED_PASSWORD}
+      # Cloudflare Turnstile SECRET (server-side verify) — from host .env, never committed.
+      - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY}
       # WhatsApp — set the real wa.me number (27XXXXXXXXX) here.
       # The link builder appends ?text= automatically.
       - NUXT_PUBLIC_WHATSAPP_NUMBER=27798279327

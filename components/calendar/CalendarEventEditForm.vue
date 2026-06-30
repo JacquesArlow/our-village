@@ -101,6 +101,14 @@ async function save() {
       <input v-model="f.staff" class="w-full rounded-field border border-base-300 bg-base-100 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="e.g. Megan" />
     </label>
 
+    <!-- QR code: available once the event exists (needs an id) -->
+    <div v-if="f.id" class="border-t border-base-200 pt-4">
+      <CalendarEventQr :event="{ id: f.id, title: f.title, isPublic: f.isPublic }" />
+    </div>
+    <p v-else class="rounded-field border border-dashed border-base-300 px-3 py-2 text-xs text-base-content/45">
+      Save the event to generate its shareable link &amp; QR code.
+    </p>
+
     <p v-if="err" class="rounded-field bg-error/10 px-3 py-2 text-sm text-error">{{ err }}</p>
 
     <div class="flex gap-2 pt-1">

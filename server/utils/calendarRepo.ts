@@ -1,7 +1,7 @@
 import { and, eq, lte, desc } from 'drizzle-orm'
 import { db } from '~~/server/db/client'
-import { event, monthBlock } from '~~/server/db/schema'
-import type { EventInsert, MonthBlockInsert, EventSelect } from '~~/server/db/schema'
+import { event, monthBlock, booking } from '~~/server/db/schema'
+import type { EventInsert, MonthBlockInsert, EventSelect, BookingInsert } from '~~/server/db/schema'
 import { monthRange } from '~~/shared/calendar'
 
 const now = () => Date.now()
@@ -96,4 +96,29 @@ export async function updateBlock(blockId: string, patch: Partial<MonthBlockInse
 
 export async function deleteBlock(blockId: string) {
   await db.delete(monthBlock).where(eq(monthBlock.id, blockId))
+}
+
+export async function createBooking(input: {
+  eventId?: string | null; eventTitle?: string | null
+  name: string; surname: string; email: string; phone: string; message?: string | null
+}) {
+  const row: BookingInsert = {
+    id: id(),
+    eventId: input.eventId ?? null,
+    eventTitle: input.eventTitle ?? null,
+    name: input.name,
+    surname: input.surname,
+    email: input.email,
+    phone: input.phone,
+    message: input.message ?? null,
+    createdAt: now()
+  }
+  await db.insert(booking).values(row)
+  return row
+}
+
+/** Bookings, newest first. Scoped to one event when eventId is given. */
+export async function listBookings(eventId?: string) {
+  const rows = await db.select().from(booking).orderBy(desc(booking.createdAt))
+  return eventId ? rows.filter(b => b.eventId === eventId) : rows
 }

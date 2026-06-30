@@ -27,7 +27,21 @@ export const monthBlock = sqliteTable('month_block', {
   updatedAt: integer('updated_at').notNull()
 })
 
+export const booking = sqliteTable('booking', {
+  id: text('id').primaryKey(),
+  eventId: text('event_id'),
+  eventTitle: text('event_title'),
+  name: text('name').notNull(),
+  surname: text('surname').notNull(),
+  email: text('email').notNull(),
+  phone: text('phone').notNull(),
+  message: text('message'),
+  createdAt: integer('created_at').notNull()
+})
+
 export type EventSelect = typeof event.$inferSelect
 export type EventInsert = typeof event.$inferInsert
 export type MonthBlockSelect = typeof monthBlock.$inferSelect
 export type MonthBlockInsert = typeof monthBlock.$inferInsert
+export type BookingSelect = typeof booking.$inferSelect
+export type BookingInsert = typeof booking.$inferInsert

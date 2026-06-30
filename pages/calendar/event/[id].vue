@@ -52,11 +52,16 @@ useHead(() => ({ title: event.value ? `${event.value.title} — Our Village` : '
           <p v-if="event.detail" class="text-base-content/70">{{ event.detail }}</p>
 
           <div class="flex flex-wrap gap-3 pt-2">
-            <WhatsAppButton :context="`the ${event.title} event`" label="Book / enquire" size="sm" />
+            <WhatsAppButton :context="`the ${event.title} event`" label="Chat on WhatsApp" size="sm" />
             <NuxtLink to="/calendar/events" class="btn btn-ghost btn-sm">See all events ›</NuxtLink>
           </div>
         </div>
       </article>
+
+      <!-- Booking / register-interest form -->
+      <div class="mt-6">
+        <CalendarBookingForm :event-id="event.id" :event-title="event.title" />
+      </div>
     </div>
   </section>
 </template>
