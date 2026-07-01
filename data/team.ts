@@ -235,7 +235,7 @@ export const team: TeamMember[] = [
     name: 'Nicole van Niekerk',
     role: 'Registered Counsellor',
     category: 'Emotional & Social Support',
-    photo: null,
+    photo: img('nicole-van-niekerk'),
     bookable: 'a counselling session with Nicole van Niekerk',
     tagline: 'Art, play and mindfulness to support trauma healing and wellbeing.',
     bio: 'Nicole integrates art, play and mindfulness to support trauma healing and emotional wellbeing — creating a gentle, creative space where children and adults can process and grow.'
