@@ -183,7 +183,7 @@ export const team: TeamMember[] = [
     name: 'Michelene du Randt',
     role: 'Physiotherapist',
     category: 'Movement & Physical Wellness',
-    photo: null,
+    photo: img('michelene-du-randt'),
     bookable: 'physiotherapy with Michelene du Randt',
     tagline: 'Paediatric and women’s health physiotherapy, respiratory rehab and pelvic care.',
     bio: 'Michelene is a physiotherapist focused on paediatric and women’s health physiotherapy, respiratory rehabilitation and pelvic dysfunction — supporting patients from tiny babies to adults with compassionate, hands-on care.'
