@@ -1,7 +1,7 @@
 <script setup lang="ts">
 interface Booking {
   id: string; name: string; surname: string; email: string; phone: string
-  message: string | null; createdAt: number
+  guests: number | null; message: string | null; createdAt: number
 }
 const props = defineProps<{ eventId: string }>()
 
@@ -40,6 +40,7 @@ const fmt = (ms: number) =>
             <th class="py-2 pr-3">Surname</th>
             <th class="py-2 pr-3">Email</th>
             <th class="py-2 pr-3">Phone</th>
+            <th class="py-2 pr-3">Guests</th>
             <th class="py-2 pr-3">Message</th>
             <th class="py-2 pr-3 whitespace-nowrap">Submitted</th>
           </tr>
@@ -50,6 +51,7 @@ const fmt = (ms: number) =>
             <td class="py-2 pr-3">{{ b.surname }}</td>
             <td class="py-2 pr-3"><a :href="`mailto:${b.email}`" class="text-secondary hover:underline">{{ b.email }}</a></td>
             <td class="py-2 pr-3 whitespace-nowrap"><a :href="`tel:${b.phone}`" class="text-secondary hover:underline">{{ b.phone }}</a></td>
+            <td class="py-2 pr-3 text-center">{{ b.guests ?? '—' }}</td>
             <td class="py-2 pr-3 text-base-content/70">{{ b.message || '—' }}</td>
             <td class="py-2 pr-3 whitespace-nowrap text-base-content/50">{{ fmt(b.createdAt) }}</td>
           </tr>

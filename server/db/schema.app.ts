@@ -35,6 +35,7 @@ export const booking = sqliteTable('booking', {
   surname: text('surname').notNull(),
   email: text('email').notNull(),
   phone: text('phone').notNull(),
+  guests: integer('guests'),
   message: text('message'),
   createdAt: integer('created_at').notNull()
 })

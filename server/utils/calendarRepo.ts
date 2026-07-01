@@ -100,7 +100,8 @@ export async function deleteBlock(blockId: string) {
 
 export async function createBooking(input: {
   eventId?: string | null; eventTitle?: string | null
-  name: string; surname: string; email: string; phone: string; message?: string | null
+  name: string; surname: string; email: string; phone: string
+  guests?: number | null; message?: string | null
 }) {
   const row: BookingInsert = {
     id: id(),
@@ -110,6 +111,7 @@ export async function createBooking(input: {
     surname: input.surname,
     email: input.email,
     phone: input.phone,
+    guests: input.guests ?? null,
     message: input.message ?? null,
     createdAt: now()
   }

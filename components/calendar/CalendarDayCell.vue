@@ -16,8 +16,17 @@ const highlighted = computed(() => props.events.some(e => e.isHighlight))
     </div>
     <ul class="relative space-y-0.5">
       <li v-for="e in events" :key="e.id" :class="colorClass(e.color)">
-        <span :class="e.detail ? 'font-semibold' : ''">{{ e.title }}</span>
-        <span v-if="!e.isPublic && editable" class="ml-1 text-[9px] uppercase text-base-content/40">(private)</span>
+        <!-- Public: clickable to the event page (→ booking form). Admin: plain text; the cell handles day-edit. -->
+        <NuxtLink
+          v-if="!editable"
+          :to="`/calendar/event/${e.id}`"
+          class="hover:underline"
+          :class="e.detail ? 'font-semibold' : ''"
+        >{{ e.title }}</NuxtLink>
+        <template v-else>
+          <span :class="e.detail ? 'font-semibold' : ''">{{ e.title }}</span>
+          <span v-if="!e.isPublic" class="ml-1 text-[9px] uppercase text-base-content/40">(private)</span>
+        </template>
       </li>
     </ul>
   </div>

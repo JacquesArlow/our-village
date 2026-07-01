@@ -2,7 +2,7 @@
 const props = defineProps<{ eventId?: string; eventTitle?: string }>()
 const cfg = useRuntimeConfig().public
 
-const f = reactive({ name: '', surname: '', email: '', phone: '', message: '' })
+const f = reactive({ name: '', surname: '', email: '', phone: '', guests: '', message: '' })
 const tsToken = ref('')
 const widgetEl = ref<HTMLElement | null>(null)
 const widgetId = ref<string | undefined>()
@@ -40,9 +40,8 @@ const inputClass =
 
 async function submit() {
   err.value = ''
-  if (!f.name.trim() || !f.surname.trim() || !f.email.trim() || !f.phone.trim()) {
-    err.value = 'Please complete your name, surname, email and phone.'; return
-  }
+  if (!f.name.trim()) { err.value = 'Please enter your name.'; return }
+  if (!f.email.trim() && !f.phone.trim()) { err.value = 'Please enter a phone number or email so we can reach you.'; return }
   if (!tsToken.value) { err.value = 'Just a moment — the spam check is still loading.'; return }
   state.value = 'submitting'
   try {
@@ -85,17 +84,26 @@ async function submit() {
         </label>
         <label class="block">
           <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Surname</span>
-          <input v-model="f.surname" :class="inputClass" placeholder="Last name" required />
-        </label>
-        <label class="block">
-          <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Email</span>
-          <input v-model="f.email" type="email" :class="inputClass" placeholder="you@example.com" required />
+          <input v-model="f.surname" :class="inputClass" placeholder="Last name" />
         </label>
         <label class="block">
           <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Phone</span>
-          <input v-model="f.phone" type="tel" :class="inputClass" placeholder="0XX XXX XXXX" required />
+          <input v-model="f.phone" type="tel" :class="inputClass" placeholder="0XX XXX XXXX" />
+        </label>
+        <label class="block">
+          <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Email</span>
+          <input v-model="f.email" type="email" :class="inputClass" placeholder="you@example.com" />
         </label>
       </div>
+      <p class="-mt-1 text-xs text-base-content/45">Please give us a phone number or an email so we can confirm with you.</p>
+
+      <div class="grid gap-3 sm:grid-cols-2">
+        <label class="block">
+          <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Number of guests</span>
+          <input v-model="f.guests" type="number" min="1" :class="inputClass" placeholder="e.g. 2" />
+        </label>
+      </div>
+
       <label class="block">
         <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Message <span class="font-normal normal-case text-base-content/40">— optional</span></span>
         <textarea v-model="f.message" rows="3" :class="inputClass" placeholder="Anything you’d like us to know?"></textarea>
