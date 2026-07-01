@@ -104,16 +104,6 @@ export const team: TeamMember[] = [
     tagline: 'Gentle, holistic chiropractic care for babies and children.',
     bio: 'With over 14 years of experience, Dr Nicole Louw provides gentle, holistic paediatric chiropractic care — supporting little ones with colic, reflux, sleeplessness and overall wellbeing through safe, nurturing treatment.'
   },
-  {
-    slug: 'michelle-kuppen',
-    name: 'Michelle Kuppen',
-    role: 'Registered Nurse & CPR Instructor',
-    category: 'Medical & Family Care',
-    photo: img('michelle-kuppen'),
-    bookable: 'a CPR & first aid course with Michelle Kuppen',
-    tagline: 'Life-saving CPR and first aid skills for parents, nannies and professionals.',
-    bio: 'Michelle is a registered nurse and nurse educator focused on equipping parents, nannies and professionals with life-saving CPR and first aid skills — delivered with patience, clarity and confidence.'
-  },
 
   // ──────────────────── Child Development & Learning ────────────────────
   {
@@ -155,16 +145,6 @@ export const team: TeamMember[] = [
     bookable: 'an educational psychology session with Corneli Oosthuizen',
     tagline: 'Body-based, neuroscience-informed support for lasting healing and growth.',
     bio: 'Corneli is an Educational Psychologist with over eight years of experience supporting children, adolescents and families through emotional, behavioural and learning challenges. With a special interest in trauma, she conducts comprehensive psycho-educational assessments and tailors therapy to each client, combining evidence-based interventions with a deep understanding of how the mind and body work together. Her body-based, neuroscience-informed approach helps clients process experiences in a way that supports lasting healing and growth.'
-  },
-  {
-    slug: 'melissa-raft',
-    name: 'Melissa Raft',
-    role: 'Educational Psychologist',
-    category: 'Child Development & Learning',
-    photo: img('melissa-raft'),
-    bookable: 'an educational psychology session with Melissa Raft',
-    tagline: 'Psycho-educational assessments, parental guidance and play-based therapy.',
-    bio: 'Melissa offers psycho-educational assessments, parental guidance, play therapy and CBT, and school-readiness support — helping children and families build confidence and thrive academically and emotionally.'
   },
 
   // ─────────────────── Movement & Physical Wellness ───────────────────
@@ -209,16 +189,6 @@ export const team: TeamMember[] = [
     bookable: 'a session with Rachael Anne Johnston',
     tagline: 'Play-based intervention for children, teens and families.',
     bio: 'Rachael is a Social Worker with over nine years of experience supporting children, teenagers and families through life’s challenges. Specialising in play-based intervention, she creates a safe and engaging environment where young people can express themselves, process difficult experiences and develop healthy emotional skills. Her holistic, family-centred approach — collaborating with parents, caregivers and teachers — helps children build resilience, strengthen relationships and navigate challenges with confidence.'
-  },
-  {
-    slug: 'anneke-bothma',
-    name: 'Anneke Bothma',
-    role: 'Family & Relationships Coach',
-    category: 'Emotional & Social Support',
-    photo: img('anneke-bothma'),
-    bookable: 'a coaching session with Anneke Bothma',
-    tagline: 'Supporting parents who feel overwhelmed, frustrated or unsure.',
-    bio: 'Through Superego, Anneke supports parents who feel overwhelmed, frustrated or unsure in their parenting journey — offering practical, compassionate coaching that strengthens family relationships and restores confidence.'
   },
   {
     slug: 'heidi-malan',
