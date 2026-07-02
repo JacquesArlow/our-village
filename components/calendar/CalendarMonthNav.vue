@@ -16,7 +16,7 @@ const years = computed(() => Array.from({ length: 9 }, (_, i) => props.year - 3 
   <div class="flex flex-col items-center gap-1">
     <div class="flex items-center gap-3">
       <button class="grid h-8 w-8 place-items-center rounded-full text-secondary transition hover:bg-base-200" @click="emit('prev')" aria-label="Previous month">‹</button>
-      <h2 class="font-script text-5xl leading-none text-secondary">{{ useMonthName(month) }} {{ year }}</h2>
+      <h2 class="font-script text-4xl leading-none text-secondary sm:text-5xl">{{ useMonthName(month) }} {{ year }}</h2>
       <button class="grid h-8 w-8 place-items-center rounded-full text-secondary transition hover:bg-base-200" @click="emit('next')" aria-label="Next month">›</button>
     </div>
     <div class="flex items-center gap-2">

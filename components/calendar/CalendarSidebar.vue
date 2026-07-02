@@ -5,7 +5,7 @@ const props = defineProps<{ blocks: BlockRow[]; editable?: boolean }>()
 const grouped = computed(() => blocksBySection(props.blocks))
 </script>
 <template>
-  <aside class="space-y-6">
+  <aside class="grid gap-8 sm:grid-cols-2">
     <div>
       <h3 class="font-script text-4xl text-secondary">Important dates:</h3>
       <ul class="mt-2 space-y-1 text-sm">
