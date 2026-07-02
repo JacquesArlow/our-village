@@ -1,5 +1,5 @@
-export type ColorToken = 'sage' | 'pink' | 'red' | 'default'
-export const COLOR_TOKENS: ColorToken[] = ['sage', 'pink', 'red', 'default']
+export type ColorToken = 'sage' | 'pink' | 'red' | 'blue' | 'default'
+export const COLOR_TOKENS: ColorToken[] = ['sage', 'pink', 'red', 'blue', 'default']
 
 export type BlockSection = 'important_dates' | 'hot_topics' | 'focus' | 'training'
 export const BLOCK_SECTIONS: BlockSection[] = ['important_dates', 'hot_topics', 'focus', 'training']

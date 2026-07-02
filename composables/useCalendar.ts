@@ -30,6 +30,6 @@ export function blocksBySection(blocks: BlockRow[]): Record<BlockSection, BlockR
 }
 
 const COLOR_CLASS: Record<string,string> = {
-  sage: 'text-primary', pink: 'text-accent', red: 'text-error', default: 'text-base-content'
+  sage: 'text-primary', pink: 'text-accent', red: 'text-error', blue: 'text-info', default: 'text-base-content'
 }
 export const colorClass = (c?: string) => COLOR_CLASS[c ?? 'default'] ?? COLOR_CLASS.default

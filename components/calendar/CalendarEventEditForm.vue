@@ -20,7 +20,7 @@ const err = ref('')
 const saving = ref(false)
 
 const SWATCH: Record<ColorToken, string> = {
-  default: 'bg-base-300', sage: 'bg-primary', pink: 'bg-accent', red: 'bg-error'
+  default: 'bg-base-300', sage: 'bg-primary', pink: 'bg-accent', red: 'bg-error', blue: 'bg-info'
 }
 
 async function save() {

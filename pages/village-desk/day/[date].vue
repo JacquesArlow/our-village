@@ -36,7 +36,7 @@ useHead({ title: `${pretty} — Village Desk` })
       <ul class="mt-6 space-y-2">
         <li v-for="e in dayEvents" :key="e.id" class="rounded-box border border-base-300 bg-base-100 p-3">
           <div class="flex items-center gap-3">
-            <span class="h-2.5 w-2.5 shrink-0 rounded-full" :class="{ 'bg-primary': e.color==='sage', 'bg-accent': e.color==='pink', 'bg-error': e.color==='red', 'bg-base-300': e.color==='default' }"></span>
+            <span class="h-2.5 w-2.5 shrink-0 rounded-full" :class="{ 'bg-primary': e.color==='sage', 'bg-accent': e.color==='pink', 'bg-error': e.color==='red', 'bg-info': e.color==='blue', 'bg-base-300': e.color==='default' }"></span>
             <span class="min-w-0 flex-1">
               <span class="font-semibold" :class="colorClass(e.color)">{{ e.title }}</span>
               <span v-if="!e.isPublic" class="ml-2 rounded-full bg-base-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-base-content/45">private</span>

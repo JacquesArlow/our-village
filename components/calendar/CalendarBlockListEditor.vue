@@ -14,7 +14,7 @@ const HINT: Record<BlockSection, string> = {
   training: 'e.g. Training: Megan, Dr Wian'
 }
 const SWATCH: Record<ColorToken, string> = {
-  default: 'bg-base-300', sage: 'bg-primary', pink: 'bg-accent', red: 'bg-error'
+  default: 'bg-base-300', sage: 'bg-primary', pink: 'bg-accent', red: 'bg-error', blue: 'bg-info'
 }
 
 async function add() {
