@@ -1,9 +1,9 @@
 name: Deploy
 
-# Staging only for now. Production (main) will be wired later.
+# staging branch -> staging env; main branch -> production env.
 on:
   push:
-    branches: [staging]
+    branches: [staging, main]
 
 jobs:
   deploy:
@@ -14,15 +14,23 @@ jobs:
       - name: Resolve target environment
         id: env
         run: |
-          # Only the staging branch triggers this workflow today, so the target
-          # is fixed to staging. When production is wired, branch on github.ref
-          # here (main -> production /opt/ourvillage-web, port 8090).
-          echo "name=staging"                       >> "$GITHUB_OUTPUT"
-          echo "dir=/opt/ourvillage-web-staging"    >> "$GITHUB_OUTPUT"
-          echo "project=ourvillage-web-staging"     >> "$GITHUB_OUTPUT"
-          echo "container=ourvillage-web-staging"   >> "$GITHUB_OUTPUT"
-          echo "image=ourvillage-web-staging"       >> "$GITHUB_OUTPUT"
-          echo "port=8093"                          >> "$GITHUB_OUTPUT"
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "name=production"                        >> "$GITHUB_OUTPUT"
+            echo "dir=/opt/ourvillage-web-prod"           >> "$GITHUB_OUTPUT"
+            echo "project=ourvillage-web-prod"            >> "$GITHUB_OUTPUT"
+            echo "container=ourvillage-web-prod"          >> "$GITHUB_OUTPUT"
+            echo "image=ourvillage-web-prod"              >> "$GITHUB_OUTPUT"
+            echo "port=8094"                              >> "$GITHUB_OUTPUT"
+            echo "auth_url=https://www.our-village.co.za" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=staging"                           >> "$GITHUB_OUTPUT"
+            echo "dir=/opt/ourvillage-web-staging"        >> "$GITHUB_OUTPUT"
+            echo "project=ourvillage-web-staging"         >> "$GITHUB_OUTPUT"
+            echo "container=ourvillage-web-staging"       >> "$GITHUB_OUTPUT"
+            echo "image=ourvillage-web-staging"           >> "$GITHUB_OUTPUT"
+            echo "port=8093"                              >> "$GITHUB_OUTPUT"
+            echo "auth_url=https://staging.our-village.co.za" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Sync source to server
         run: |
@@ -38,7 +46,6 @@ jobs:
 
       - name: Write deploy .env from GitHub Secrets
         env:
-          BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
           ADMIN_SEED_EMAIL: ${{ secrets.ADMIN_SEED_EMAIL }}
           ADMIN_SEED_PASSWORD: ${{ secrets.ADMIN_SEED_PASSWORD }}
@@ -57,7 +64,7 @@ jobs:
           dir="${{ steps.env.outputs.dir }}"
           umask 077
           {
-            printf 'BETTER_AUTH_URL=%s\n'      "$BETTER_AUTH_URL"
+            printf 'BETTER_AUTH_URL=%s\n'      "${{ steps.env.outputs.auth_url }}"
             printf 'BETTER_AUTH_SECRET=%s\n'   "$BETTER_AUTH_SECRET"
             printf 'ADMIN_SEED_EMAIL=%s\n'     "$ADMIN_SEED_EMAIL"
             printf 'ADMIN_SEED_PASSWORD=%s\n'  "$ADMIN_SEED_PASSWORD"
