@@ -12,7 +12,7 @@ const highlighted = computed(() => props.events.some(e => e.isHighlight))
   >
     <div v-if="date" class="mb-1 flex items-center justify-between">
       <span class="font-display font-bold text-base-content/80">{{ dayNum(date) }}</span>
-      <span v-if="highlighted" class="absolute right-1 top-1 h-7 w-7 rounded-full bg-primary/55"></span>
+      <span v-if="highlighted" class="h-2.5 w-2.5 shrink-0 rounded-full bg-primary" aria-hidden="true"></span>
     </div>
     <ul class="relative space-y-0.5">
       <li v-for="e in events" :key="e.id" :class="colorClass(e.color)">
