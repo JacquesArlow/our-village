@@ -169,6 +169,18 @@ export const team: TeamMember[] = [
     bio: 'Michelene is a physiotherapist focused on paediatric and women’s health physiotherapy, respiratory rehabilitation and pelvic dysfunction — supporting patients from tiny babies to adults with compassionate, hands-on care.'
   },
 
+  // ─────────────────────── Nutrition & Feeding Support ───────────────────────
+  {
+    slug: 'amorie-liebenberg',
+    name: 'Amorie Liebenberg',
+    role: 'Registered Dietitian & Certified Lactation Consultant',
+    category: 'Nutrition & Feeding Support',
+    photo: img('amorie-liebenberg'),
+    bookable: 'nutrition or lactation support with Amorie Liebenberg',
+    tagline: 'Compassionate, evidence-based nutrition and lactation care for the whole family.',
+    bio: 'Amorie is a Registered Dietitian and Certified Lactation Consultant, and the founder of Rooted Willow Dietitians. She is passionate about providing compassionate, evidence-based nutrition care, empowering individuals and families with practical guidance to build healthy, sustainable lifestyles.'
+  },
+
   // ─────────────────────── Emotional & Social Support ───────────────────────
   {
     slug: 'alicia-coertze',
