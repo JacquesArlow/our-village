@@ -13,8 +13,8 @@ export interface SiteConfig {
 const DEFAULT_SITE: SiteConfig = {
   name: 'Our Village',
   tagline: 'Care That Grows With You',
-  phone: '+27 65 844 9885',
-  phoneHref: 'tel:+276****9885',
+  phone: '+27 79 827 9327',
+  phoneHref: 'tel:+27798279327',
   whatsapp: '27798279327',
   email: 'reception@our-village.co.za',
   address: '525 Alsation Drive, Garsfontein, Pretoria',
