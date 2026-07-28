@@ -3,10 +3,10 @@ const site = useSite()
 useHead({ title: 'In-Person Antenatal Classes — Our Village' })
 
 const reasons = [
-  { img: '/antenatal/real-connection.png', t: 'Real-life connection', d: 'Meet other parents-to-be and build a supportive community.' },
-  { img: '/antenatal/expert-led.png', t: 'Expert-led', d: 'Learn directly from experienced midwives and practitioners.' },
-  { img: '/antenatal/hands-on.png', t: 'Hands-on learning', d: 'Practise the skills you’ll use with your newborn.' },
-  { img: '/antenatal/holistic.png', t: 'Holistic approach', d: 'Pregnancy, labour, delivery, newborn care, breastfeeding and emotional wellbeing.' }
+  { img: '/antenatal/real-connection.webp', t: 'Real-life connection', d: 'Meet other parents-to-be and build a supportive community.' },
+  { img: '/antenatal/expert-led.webp', t: 'Expert-led', d: 'Learn directly from experienced midwives and practitioners.' },
+  { img: '/antenatal/hands-on.webp', t: 'Hands-on learning', d: 'Practise the skills you’ll use with your newborn.' },
+  { img: '/antenatal/holistic.webp', t: 'Holistic approach', d: 'Pregnancy, labour, delivery, newborn care, breastfeeding and emotional wellbeing.' }
 ]
 </script>
 

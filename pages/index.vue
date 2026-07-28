@@ -43,7 +43,7 @@ useHead({ title: 'Our Village — Care That Grows With You' })
 
         <div class="relative">
           <div class="overflow-hidden rounded-[2.5rem] border-8 border-base-100 shadow-2xl">
-            <img src="/services/baby-family-clinic.jpg" alt="Caring for babies and families at Our Village" class="aspect-[4/3] w-full object-cover" />
+            <img src="/services/baby-family-clinic.webp" alt="Caring for babies and families at Our Village" class="aspect-[4/3] w-full object-cover" />
           </div>
           <div class="absolute -bottom-6 -left-6 hidden rounded-2xl bg-primary px-6 py-4 text-primary-content shadow-xl sm:block">
             <p class="font-display text-2xl font-bold leading-none">15+</p>
@@ -70,8 +70,8 @@ useHead({ title: 'Our Village — Care That Grows With You' })
     <section class="section-y bg-base-200">
       <div class="container-px grid items-center gap-12 lg:grid-cols-2">
         <div class="order-2 grid grid-cols-2 gap-4 lg:order-1">
-          <img src="/services/nursing-care.jpg" alt="" class="aspect-square w-full rounded-3xl object-cover" />
-          <img src="/services/occupational-therapy.jpg" alt="" class="mt-8 aspect-square w-full rounded-3xl object-cover" />
+          <img src="/services/nursing-care.webp" alt="" class="aspect-square w-full rounded-3xl object-cover" />
+          <img src="/services/occupational-therapy.webp" alt="" class="mt-8 aspect-square w-full rounded-3xl object-cover" />
         </div>
         <div class="order-1 lg:order-2">
           <p class="eyebrow mb-3">Previously BCF The Village — Now Our Village</p>

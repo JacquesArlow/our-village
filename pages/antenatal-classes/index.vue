@@ -18,7 +18,7 @@ useHead({ title: 'Antenatal Classes — Our Village' })
     <section class="section-y">
       <div class="container-px mx-auto grid max-w-4xl gap-8 md:grid-cols-2">
         <NuxtLink to="/antenatal-classes/online-antenatal-classes" class="group flex flex-col overflow-hidden rounded-3xl border border-base-200 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-          <img src="/antenatal/online-hero.png" alt="Online antenatal classes" class="aspect-[16/10] w-full object-cover" />
+          <img src="/antenatal/online-hero.webp" alt="Online antenatal classes" class="aspect-[16/10] w-full object-cover" />
           <div class="flex flex-1 flex-col p-7">
             <h2 class="font-display text-2xl font-bold text-secondary group-hover:text-primary">Online Classes</h2>
             <p class="mt-2 flex-1 text-base-content/70">Self-paced video series with lifetime access. Learn at your own pace, wherever you are.</p>
@@ -27,7 +27,7 @@ useHead({ title: 'Antenatal Classes — Our Village' })
         </NuxtLink>
 
         <NuxtLink to="/antenatal-classes/inperson-antenatal" class="group flex flex-col overflow-hidden rounded-3xl border border-base-200 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-          <img src="/antenatal/real-connection.png" alt="In-person antenatal classes" class="aspect-[16/10] w-full bg-base-200 object-contain p-6" />
+          <img src="/antenatal/real-connection.webp" alt="In-person antenatal classes" class="aspect-[16/10] w-full bg-base-200 object-contain p-6" />
           <div class="flex flex-1 flex-col p-7">
             <h2 class="font-display text-2xl font-bold text-secondary group-hover:text-primary">In-Person Classes</h2>
             <p class="mt-2 flex-1 text-base-content/70">Hands-on learning and real connection with experts and other parents-to-be.</p>

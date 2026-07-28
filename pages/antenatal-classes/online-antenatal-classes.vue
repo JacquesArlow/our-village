@@ -35,7 +35,7 @@ const who = ['First-time parents', 'Parents wanting a refresher', 'Busy parents 
             <span class="font-display text-3xl font-bold text-primary">R1 300</span>
           </div>
         </div>
-        <img src="/antenatal/online-hero.png" alt="Online antenatal classes" class="w-full rounded-[2rem] object-cover shadow-xl" />
+        <img src="/antenatal/online-hero.webp" alt="Online antenatal classes" class="w-full rounded-[2rem] object-cover shadow-xl" />
       </div>
     </section>
 

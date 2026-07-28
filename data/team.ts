@@ -28,7 +28,7 @@ export const teamCategories: TeamCategory[] = [
   'Support Team'
 ]
 
-const img = (slug: string) => `/team/${slug}.jpg`
+const img = (slug: string) => `/team/${slug}.webp`
 
 export const team: TeamMember[] = [
   // ───────────────────────── Medical & Family Care ─────────────────────────
@@ -145,6 +145,16 @@ export const team: TeamMember[] = [
     bookable: 'an educational psychology session with Corneli Oosthuizen',
     tagline: 'Body-based, neuroscience-informed support for lasting healing and growth.',
     bio: 'Corneli is an Educational Psychologist with over eight years of experience supporting children, adolescents and families through emotional, behavioural and learning challenges. With a special interest in trauma, she conducts comprehensive psycho-educational assessments and tailors therapy to each client, combining evidence-based interventions with a deep understanding of how the mind and body work together. Her body-based, neuroscience-informed approach helps clients process experiences in a way that supports lasting healing and growth.'
+  },
+  {
+    slug: 'jessica-van-wyk',
+    name: 'Jessica van Wyk',
+    role: 'Baby & Toddler Stimulation Facilitator',
+    category: 'Child Development & Learning',
+    photo: img('jessica-van-wyk'),
+    bookable: 'a baby stimulation class with Jessica van Wyk',
+    tagline: 'Play-based stimulation classes where babies develop and moms find their village.',
+    bio: 'Jessica is the Pienkvoet-Pret facilitator for Faerie Glen, offering play-based stimulation and development classes for babies and toddlers. She holds a B.Ed degree and spent twelve years as a Foundation Phase teacher before becoming a mom to her son Daniël — the year she first fell in love with Pienkvoet-Pret as a parent herself. Her weekly 90-minute classes are grouped by age from three months to three years, weaving together sensory play, fine and gross motor activities, music and movement, rhymes and language development, baby massage and a love of reading. Just as importantly, Jessica creates a safe, unhurried space where moms can simply be themselves and find their own village of support.'
   },
 
   // ─────────────────── Movement & Physical Wellness ───────────────────
