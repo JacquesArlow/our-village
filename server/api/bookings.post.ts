@@ -1,11 +1,37 @@
-import { createBooking, getEvent } from '~~/server/utils/calendarRepo'
+import { createBooking, createFormSubmission, getEvent } from '~~/server/utils/calendarRepo'
+import { storePdf } from '~~/server/utils/fileStorage'
 import { verifyTurnstile } from '~~/server/utils/turnstile'
 import { sendMail, mailerConfigured } from '~~/server/utils/mailer'
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event)
+  const contentType = getRequestHeader(event, 'content-type') || ''
+  const isMultipart = contentType.includes('multipart/form-data')
+  let filePart: Awaited<ReturnType<typeof readMultipartFormData>>[number] | undefined
+  let body: Record<string, unknown>
+
+  if (isMultipart) {
+    const parts = await readMultipartFormData(event)
+    const getText = (name: string) => parts?.find(p => p.name === name)?.data.toString().trim() || ''
+    body = {
+      name: getText('name'),
+      surname: getText('surname'),
+      email: getText('email'),
+      phone: getText('phone'),
+      guests: getText('guests'),
+      babyName: getText('babyName'),
+      babySurname: getText('babySurname'),
+      babyDateOfBirth: getText('babyDateOfBirth'),
+      message: getText('message'),
+      eventId: getText('eventId'),
+      eventTitle: getText('eventTitle'),
+      turnstileToken: getText('turnstileToken')
+    }
+    filePart = parts?.find(p => p.name === 'completedForm' || p.name === 'file')
+  } else {
+    body = await readBody(event)
+  }
 
   // Turnstile (managed) — verify the token before doing anything else.
   const ip = getRequestHeader(event, 'cf-connecting-ip')
@@ -25,6 +51,7 @@ export default defineEventHandler(async (event) => {
   const eventId = str(body?.eventId) || null
   const eventTitle = str(body?.eventTitle) || null
   const bookingEvent = eventId ? await getEvent(eventId) : null
+  const requiresCompletedForm = !!bookingEvent?.formFilePath
   const isGrowthScreening = bookingEvent?.bookingFormVariant
     ? bookingEvent.bookingFormVariant === 'growth_screening'
     : /growth\s*ot|developmental\s+screenings?/i.test(eventTitle || '')
@@ -36,6 +63,26 @@ export default defineEventHandler(async (event) => {
   if (email && !EMAIL_RE.test(email)) throw createError({ statusCode: 400, statusMessage: 'Please enter a valid email address.' })
   if (babyDateOfBirth && !/^\d{4}-\d{2}-\d{2}$/.test(babyDateOfBirth)) {
     throw createError({ statusCode: 400, statusMessage: 'Please enter a valid baby date of birth.' })
+  }
+  if (requiresCompletedForm && !filePart?.data?.length) {
+    throw createError({ statusCode: 400, statusMessage: 'Please upload the completed event PDF before sending your details.' })
+  }
+
+  let submittedFormFileName: string | null = null
+  if (requiresCompletedForm && filePart?.data?.length && eventId) {
+    const file = new File([filePart.data], filePart.filename || 'completed-form.pdf', {
+      type: filePart.type || 'application/pdf'
+    })
+    const stored = await storePdf(file, `completed-forms/${eventId}`)
+    await createFormSubmission({
+      eventId,
+      eventTitle: bookingEvent?.title || eventTitle,
+      name: `${name} ${surname}`.trim(),
+      email: email || null,
+      phone: phone || null,
+      ...stored
+    })
+    submittedFormFileName = stored.fileName
   }
 
   await createBooking({
@@ -61,6 +108,9 @@ export default defineEventHandler(async (event) => {
           `Cost:   ${costLabel}`
         ]
       : [`Guests: ${guests ?? '(not given)'}`]
+    const formLines = submittedFormFileName
+      ? [`Completed form: ${submittedFormFileName}`]
+      : []
     const lines = [
       `New booking${eventTitle ? ` for: ${eventTitle}` : ''}`,
       '',
@@ -68,6 +118,7 @@ export default defineEventHandler(async (event) => {
       `Email:  ${email || '(not given)'}`,
       `Phone:  ${phone || '(not given)'}`,
       ...eventLines,
+      ...formLines,
       body?.message ? `\nMessage:\n${str(body?.message)}` : ''
     ].filter(Boolean)
     try {

@@ -4,6 +4,7 @@ import type { BookingFormVariant } from '~~/shared/calendar'
 const props = defineProps<{
   eventId?: string
   eventTitle?: string
+  formFileName?: string | null
   bookingFormVariant?: BookingFormVariant | null
   bookingCostLabel?: string | null
 }>()
@@ -25,6 +26,8 @@ const isGrowthScreening = computed(() =>
   || (!props.bookingFormVariant && /growth\s*ot|developmental\s+screenings?/i.test(props.eventTitle || ''))
 )
 const costLabel = computed(() => props.bookingCostLabel?.trim() || 'R375')
+const hasEventForm = computed(() => !!props.eventId && !!props.formFileName)
+const completedFormFile = ref<File | null>(null)
 const tsToken = ref('')
 const widgetEl = ref<HTMLElement | null>(null)
 const widgetId = ref<string | undefined>()
@@ -60,16 +63,49 @@ onMounted(() => {
 const inputClass =
   'w-full rounded-field border border-base-300 bg-base-100 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20'
 
+function chooseCompletedForm(e: Event) {
+  const input = e.target as HTMLInputElement
+  completedFormFile.value = input.files?.[0] ?? null
+  err.value = ''
+}
+
+function isPdf(file: File) {
+  return file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf'
+}
+
 async function submit() {
   err.value = ''
   if (!f.name.trim()) { err.value = 'Please enter your name.'; return }
   if (!f.email.trim() && !f.phone.trim()) { err.value = 'Please enter a phone number or email so we can reach you.'; return }
+  if (hasEventForm.value && !completedFormFile.value) {
+    err.value = 'Please download, complete, and upload the event PDF before sending your details.'
+    return
+  }
+  if (hasEventForm.value && completedFormFile.value && !isPdf(completedFormFile.value)) {
+    err.value = 'Please upload the completed form as a PDF file.'
+    return
+  }
   if (!tsToken.value) { err.value = 'Just a moment — the spam check is still loading.'; return }
   state.value = 'submitting'
   try {
+    let body: Record<string, string | undefined> | FormData
+    const payload = {
+      ...f,
+      eventId: props.eventId,
+      eventTitle: props.eventTitle,
+      turnstileToken: tsToken.value
+    }
+    if (hasEventForm.value && completedFormFile.value) {
+      const formData = new FormData()
+      Object.entries(payload).forEach(([key, value]) => formData.set(key, value ?? ''))
+      formData.set('completedForm', completedFormFile.value)
+      body = formData
+    } else {
+      body = payload
+    }
     await $fetch('/api/bookings', {
       method: 'POST',
-      body: { ...f, eventId: props.eventId, eventTitle: props.eventTitle, turnstileToken: tsToken.value }
+      body
     })
     state.value = 'done'
   } catch (e: any) {
@@ -101,6 +137,29 @@ async function submit() {
 
       <div v-if="isGrowthScreening" class="rounded-field border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-base-content/70">
         <span class="font-semibold text-secondary">Cost:</span> {{ costLabel }}
+      </div>
+
+      <div v-if="hasEventForm" class="rounded-field border border-primary/20 bg-primary/5 p-4">
+        <div>
+          <p class="font-display text-sm font-bold uppercase tracking-wide text-secondary">Complete the event form</p>
+          <p class="mt-1 text-sm text-base-content/60">
+            Download the PDF, complete it, then upload the completed PDF before sending your details.
+          </p>
+          <p class="mt-1 text-xs text-base-content/45">{{ formFileName }}</p>
+        </div>
+        <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <a :href="`/api/calendar/event-form?id=${eventId}`" class="btn btn-primary btn-sm sm:w-auto">Download form</a>
+          <label class="min-w-0 flex-1">
+            <span class="sr-only">Upload completed PDF</span>
+            <input type="file" accept="application/pdf,.pdf" class="file-input file-input-bordered file-input-sm w-full" @change="chooseCompletedForm" />
+          </label>
+        </div>
+        <p v-if="completedFormFile" class="mt-3 rounded-field bg-success/10 px-3 py-2 text-sm text-success">
+          Completed PDF ready to submit: <span class="font-semibold">{{ completedFormFile.name }}</span>
+        </p>
+        <p v-else class="mt-3 rounded-field bg-warning/10 px-3 py-2 text-sm text-warning-content">
+          A completed PDF is required before this registration can be submitted.
+        </p>
       </div>
 
       <div class="grid gap-3 sm:grid-cols-2">
