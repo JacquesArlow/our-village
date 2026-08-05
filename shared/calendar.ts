@@ -1,6 +1,8 @@
 export type ColorToken = 'sage' | 'pink' | 'red' | 'blue' | 'default'
 export const COLOR_TOKENS: ColorToken[] = ['sage', 'pink', 'red', 'blue', 'default']
 
+export type BookingFormVariant = 'standard' | 'growth_screening'
+
 export type BlockSection = 'important_dates' | 'hot_topics' | 'focus' | 'training'
 export const BLOCK_SECTIONS: BlockSection[] = ['important_dates', 'hot_topics', 'focus', 'training']
 
@@ -34,11 +36,31 @@ export interface EventRow {
   title: string
   detail: string | null
   staff: string | null
+  formFileName: string | null
+  formFilePath?: string | null
+  formFileMime?: string | null
+  formFileSize: number | null
+  formUploadedAt: number | null
+  bookingFormVariant: BookingFormVariant | null
+  bookingCostLabel: string | null
   color: ColorToken
   isHighlight: boolean
   isPublic: boolean
   createdAt: number
   updatedAt: number
+}
+
+export interface FormSubmissionRow {
+  id: string
+  eventId: string
+  eventTitle: string | null
+  name: string
+  email: string | null
+  phone: string | null
+  fileName: string
+  fileMime: string
+  fileSize: number
+  createdAt: number
 }
 
 export interface BlockRow {

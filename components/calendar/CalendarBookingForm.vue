@@ -1,8 +1,30 @@
 <script setup lang="ts">
-const props = defineProps<{ eventId?: string; eventTitle?: string }>()
+import type { BookingFormVariant } from '~~/shared/calendar'
+
+const props = defineProps<{
+  eventId?: string
+  eventTitle?: string
+  bookingFormVariant?: BookingFormVariant | null
+  bookingCostLabel?: string | null
+}>()
 const cfg = useRuntimeConfig().public
 
-const f = reactive({ name: '', surname: '', email: '', phone: '', guests: '', message: '' })
+const f = reactive({
+  name: '',
+  surname: '',
+  email: '',
+  phone: '',
+  guests: '',
+  babyName: '',
+  babySurname: '',
+  babyDateOfBirth: '',
+  message: ''
+})
+const isGrowthScreening = computed(() =>
+  props.bookingFormVariant === 'growth_screening'
+  || (!props.bookingFormVariant && /growth\s*ot|developmental\s+screenings?/i.test(props.eventTitle || ''))
+)
+const costLabel = computed(() => props.bookingCostLabel?.trim() || 'R375')
 const tsToken = ref('')
 const widgetEl = ref<HTMLElement | null>(null)
 const widgetId = ref<string | undefined>()
@@ -77,6 +99,10 @@ async function submit() {
         <p v-if="eventTitle" class="text-sm text-base-content/55">for <span class="font-semibold">{{ eventTitle }}</span></p>
       </div>
 
+      <div v-if="isGrowthScreening" class="rounded-field border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-base-content/70">
+        <span class="font-semibold text-secondary">Cost:</span> {{ costLabel }}
+      </div>
+
       <div class="grid gap-3 sm:grid-cols-2">
         <label class="block">
           <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Name</span>
@@ -97,7 +123,22 @@ async function submit() {
       </div>
       <p class="-mt-1 text-xs text-base-content/45">Please give us a phone number or an email so we can confirm with you.</p>
 
-      <div class="grid gap-3 sm:grid-cols-2">
+      <div v-if="isGrowthScreening" class="grid gap-3 sm:grid-cols-2">
+        <label class="block">
+          <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Baby name</span>
+          <input v-model="f.babyName" :class="inputClass" placeholder="Baby first name" />
+        </label>
+        <label class="block">
+          <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Baby surname</span>
+          <input v-model="f.babySurname" :class="inputClass" placeholder="Baby surname" />
+        </label>
+        <label class="block sm:col-span-2">
+          <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Baby date of birth</span>
+          <input v-model="f.babyDateOfBirth" type="date" :class="inputClass" />
+        </label>
+      </div>
+
+      <div v-else class="grid gap-3 sm:grid-cols-2">
         <label class="block">
           <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Number of guests</span>
           <input v-model="f.guests" type="number" min="1" :class="inputClass" placeholder="e.g. 2" />

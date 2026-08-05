@@ -14,6 +14,7 @@ services:
       - NITRO_PORT=3000
       # SQLite (libSQL) lives on the mounted volume so it survives rebuilds.
       - DATABASE_URL=file:/data/ourvillage.db
+      - UPLOADS_DIR=/data/uploads
       # Auth + admin seed are supplied via the host .env file (never committed).
       - BETTER_AUTH_URL=${BETTER_AUTH_URL:-https://staging.our-village.co.za}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}

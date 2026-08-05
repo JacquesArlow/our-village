@@ -5,6 +5,7 @@ import { colorClass } from '~~/composables/useCalendar'
 const route = useRoute()
 const id = route.params.id as string
 const { data: event, error } = await useFetch<EventRow>('/api/calendar/event', { query: { id } })
+const showUpload = ref(false)
 
 const fmtFull = (d: string) =>
   new Date(d + 'T00:00:00').toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
@@ -55,12 +56,32 @@ useHead(() => ({ title: event.value ? `${event.value.title} — Our Village` : '
             <WhatsAppButton :context="`the ${event.title} event`" label="Chat on WhatsApp" size="sm" />
             <NuxtLink to="/calendar/events" class="btn btn-ghost btn-sm">See all events ›</NuxtLink>
           </div>
+
+          <div v-if="event.formFileName" class="rounded-box border border-primary/20 bg-primary/5 p-4">
+            <p class="font-display text-sm font-bold uppercase tracking-wide text-secondary">Event form</p>
+            <p class="mt-1 text-sm text-base-content/60">{{ event.formFileName }}</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <a :href="`/api/calendar/event-form?id=${event.id}`" class="btn btn-primary btn-sm">Download form</a>
+              <button class="btn btn-outline btn-sm" type="button" @click="showUpload = !showUpload">
+                {{ showUpload ? 'Hide upload' : 'Upload completed form' }}
+              </button>
+            </div>
+          </div>
         </div>
       </article>
 
+      <div v-if="event?.formFileName && showUpload" class="mt-6">
+        <CalendarCompletedFormUpload :event-id="event.id" :event-title="event.title" />
+      </div>
+
       <!-- Booking / register-interest form -->
-      <div class="mt-6">
-        <CalendarBookingForm :event-id="event.id" :event-title="event.title" />
+      <div v-if="event" class="mt-6">
+        <CalendarBookingForm
+          :event-id="event.id"
+          :event-title="event.title"
+          :booking-form-variant="event.bookingFormVariant"
+          :booking-cost-label="event.bookingCostLabel"
+        />
       </div>
     </div>
   </section>

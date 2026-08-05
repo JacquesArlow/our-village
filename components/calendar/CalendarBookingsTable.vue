@@ -1,7 +1,9 @@
 <script setup lang="ts">
 interface Booking {
   id: string; name: string; surname: string; email: string; phone: string
-  guests: number | null; message: string | null; createdAt: number
+  guests: number | null
+  babyName: string | null; babySurname: string | null; babyDateOfBirth: string | null
+  message: string | null; createdAt: number
 }
 const props = defineProps<{ eventId: string }>()
 
@@ -17,6 +19,8 @@ onMounted(load)
 
 const fmt = (ms: number) =>
   new Date(ms).toLocaleString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+const fmtDate = (d: string | null) =>
+  d ? new Date(d + 'T00:00:00').toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'
 </script>
 
 <template>
@@ -33,7 +37,7 @@ const fmt = (ms: number) =>
     </p>
 
     <div v-else class="overflow-x-auto">
-      <table class="w-full min-w-[640px] text-sm">
+      <table class="w-full min-w-[840px] text-sm">
         <thead>
           <tr class="border-b border-base-300 text-left text-xs font-semibold uppercase tracking-wide text-base-content/50">
             <th class="py-2 pr-3">Name</th>
@@ -41,6 +45,8 @@ const fmt = (ms: number) =>
             <th class="py-2 pr-3">Email</th>
             <th class="py-2 pr-3">Phone</th>
             <th class="py-2 pr-3">Guests</th>
+            <th class="py-2 pr-3">Baby</th>
+            <th class="py-2 pr-3 whitespace-nowrap">Baby DOB</th>
             <th class="py-2 pr-3">Message</th>
             <th class="py-2 pr-3 whitespace-nowrap">Submitted</th>
           </tr>
@@ -51,7 +57,9 @@ const fmt = (ms: number) =>
             <td class="py-2 pr-3">{{ b.surname }}</td>
             <td class="py-2 pr-3"><a :href="`mailto:${b.email}`" class="text-secondary hover:underline">{{ b.email }}</a></td>
             <td class="py-2 pr-3 whitespace-nowrap"><a :href="`tel:${b.phone}`" class="text-secondary hover:underline">{{ b.phone }}</a></td>
-            <td class="py-2 pr-3 text-center">{{ b.guests ?? '—' }}</td>
+            <td class="py-2 pr-3 text-center">{{ b.guests ?? '-' }}</td>
+            <td class="py-2 pr-3">{{ [b.babyName, b.babySurname].filter(Boolean).join(' ') || '-' }}</td>
+            <td class="py-2 pr-3 whitespace-nowrap">{{ fmtDate(b.babyDateOfBirth) }}</td>
             <td class="py-2 pr-3 text-base-content/70">{{ b.message || '—' }}</td>
             <td class="py-2 pr-3 whitespace-nowrap text-base-content/50">{{ fmt(b.createdAt) }}</td>
           </tr>

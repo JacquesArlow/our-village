@@ -1,14 +1,14 @@
 import { and, eq, lte, desc } from 'drizzle-orm'
 import { db } from '~~/server/db/client'
-import { event, monthBlock, booking } from '~~/server/db/schema'
-import type { EventInsert, MonthBlockInsert, EventSelect, BookingInsert } from '~~/server/db/schema'
+import { event, monthBlock, booking, formSubmission } from '~~/server/db/schema'
+import type { EventInsert, MonthBlockInsert, EventSelect, BookingInsert, FormSubmissionInsert } from '~~/server/db/schema'
 import { monthRange } from '~~/shared/calendar'
 
 const now = () => Date.now()
 const id = () => crypto.randomUUID()
 
 function toPublicEvent(e: EventSelect) {
-  const { staff, createdAt, updatedAt, ...pub } = e
+  const { staff, formFilePath, createdAt, updatedAt, ...pub } = e
   return pub
 }
 
@@ -47,6 +47,11 @@ export async function getPublicEvent(eventId: string) {
   return toPublicEvent(row)
 }
 
+export async function getEvent(eventId: string) {
+  const rows = await db.select().from(event).where(eq(event.id, eventId))
+  return rows[0] ?? null
+}
+
 export async function createEvent(input: Partial<EventInsert> & { startDate: string; title: string }) {
   const row: EventInsert = {
     id: id(),
@@ -55,6 +60,13 @@ export async function createEvent(input: Partial<EventInsert> & { startDate: str
     title: input.title,
     detail: input.detail ?? null,
     staff: input.staff ?? null,
+    formFileName: input.formFileName ?? null,
+    formFilePath: input.formFilePath ?? null,
+    formFileMime: input.formFileMime ?? null,
+    formFileSize: input.formFileSize ?? null,
+    formUploadedAt: input.formUploadedAt ?? null,
+    bookingFormVariant: input.bookingFormVariant ?? null,
+    bookingCostLabel: input.bookingCostLabel ?? null,
     color: input.color ?? 'default',
     isHighlight: input.isHighlight ?? false,
     isPublic: input.isPublic ?? false,
@@ -67,6 +79,28 @@ export async function createEvent(input: Partial<EventInsert> & { startDate: str
 
 export async function updateEvent(eventId: string, patch: Partial<EventInsert>) {
   await db.update(event).set({ ...patch, updatedAt: now() }).where(eq(event.id, eventId))
+}
+
+export async function setEventFormFile(eventId: string, file: {
+  fileName: string; filePath: string; fileMime: string; fileSize: number
+}) {
+  await updateEvent(eventId, {
+    formFileName: file.fileName,
+    formFilePath: file.filePath,
+    formFileMime: file.fileMime,
+    formFileSize: file.fileSize,
+    formUploadedAt: now()
+  })
+}
+
+export async function clearEventFormFile(eventId: string) {
+  await updateEvent(eventId, {
+    formFileName: null,
+    formFilePath: null,
+    formFileMime: null,
+    formFileSize: null,
+    formUploadedAt: null
+  })
 }
 
 export async function deleteEvent(eventId: string) {
@@ -101,7 +135,9 @@ export async function deleteBlock(blockId: string) {
 export async function createBooking(input: {
   eventId?: string | null; eventTitle?: string | null
   name: string; surname: string; email: string; phone: string
-  guests?: number | null; message?: string | null
+  guests?: number | null
+  babyName?: string | null; babySurname?: string | null; babyDateOfBirth?: string | null
+  message?: string | null
 }) {
   const row: BookingInsert = {
     id: id(),
@@ -112,6 +148,9 @@ export async function createBooking(input: {
     email: input.email,
     phone: input.phone,
     guests: input.guests ?? null,
+    babyName: input.babyName ?? null,
+    babySurname: input.babySurname ?? null,
+    babyDateOfBirth: input.babyDateOfBirth ?? null,
     message: input.message ?? null,
     createdAt: now()
   }
@@ -123,4 +162,36 @@ export async function createBooking(input: {
 export async function listBookings(eventId?: string) {
   const rows = await db.select().from(booking).orderBy(desc(booking.createdAt))
   return eventId ? rows.filter(b => b.eventId === eventId) : rows
+}
+
+export async function createFormSubmission(input: {
+  eventId: string; eventTitle?: string | null
+  name: string; email?: string | null; phone?: string | null
+  fileName: string; filePath: string; fileMime: string; fileSize: number
+}) {
+  const row: FormSubmissionInsert = {
+    id: id(),
+    eventId: input.eventId,
+    eventTitle: input.eventTitle ?? null,
+    name: input.name,
+    email: input.email ?? null,
+    phone: input.phone ?? null,
+    fileName: input.fileName,
+    filePath: input.filePath,
+    fileMime: input.fileMime,
+    fileSize: input.fileSize,
+    createdAt: now()
+  }
+  await db.insert(formSubmission).values(row)
+  return row
+}
+
+export async function listFormSubmissions(eventId?: string) {
+  const rows = await db.select().from(formSubmission).orderBy(desc(formSubmission.createdAt))
+  return (eventId ? rows.filter(r => r.eventId === eventId) : rows).map(({ filePath, ...row }) => row)
+}
+
+export async function getFormSubmission(submissionId: string) {
+  const rows = await db.select().from(formSubmission).where(eq(formSubmission.id, submissionId))
+  return rows[0] ?? null
 }
