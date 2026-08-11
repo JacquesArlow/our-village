@@ -40,7 +40,6 @@ export const serviceCategories: ServiceCategory[] = [
     image: '/services/occupational-therapy.webp',
     services: [
       { name: 'Occupational Therapy', description: 'Early childhood development, sensory integration and play-based support for independence and school readiness.' },
-      { name: 'Little Learners', description: 'A supportive early-development group for babies and toddlers with additional needs, developmental differences or families awaiting assessment.' },
       { name: 'Speech Therapy', description: 'Communication therapy plus feeding support — breastfeeding, bottle feeding and early feeding transitions.' },
       { name: 'Educational Psychology', description: 'Psycho-educational assessments, parental guidance, play therapy / CBT, and school readiness & accommodations.' }
     ]

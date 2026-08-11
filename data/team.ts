@@ -156,16 +156,6 @@ export const team: TeamMember[] = [
     tagline: 'Play-based stimulation classes where babies develop and moms find their village.',
     bio: 'Jessica is the Pienkvoet-Pret facilitator for Faerie Glen, offering play-based stimulation and development classes for babies and toddlers. She holds a B.Ed degree and spent twelve years as a Foundation Phase teacher before becoming a mom to her son Daniël — the year she first fell in love with Pienkvoet-Pret as a parent herself. Her weekly 90-minute classes are grouped by age from three months to three years, weaving together sensory play, fine and gross motor activities, music and movement, rhymes and language development, baby massage and a love of reading. Just as importantly, Jessica creates a safe, unhurried space where moms can simply be themselves and find their own village of support.'
   },
-  {
-    slug: 'lizelle-wheeler',
-    name: 'Lizelle Wheeler',
-    role: 'Occupational Therapist & Case Manager',
-    category: 'Child Development & Learning',
-    photo: img('lizelle-wheeler'),
-    bookable: 'the Little Learners group with Lizelle Wheeler',
-    tagline: 'Inclusive early-development support for babies and toddlers with additional needs.',
-    bio: 'Lizelle is an Occupational Therapist and Case Manager who supports young children with developmental differences, delays and additional needs, while helping parents feel informed and less alone. Through Little Learners, she offers a calm, inclusive group space where children can participate at their own pace and families can connect with others who understand their journey.'
-  },
 
   // ─────────────────── Movement & Physical Wellness ───────────────────
   {
