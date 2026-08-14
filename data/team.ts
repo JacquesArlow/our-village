@@ -147,6 +147,16 @@ export const team: TeamMember[] = [
     bio: 'Corneli is an Educational Psychologist with over eight years of experience supporting children, adolescents and families through emotional, behavioural and learning challenges. With a special interest in trauma, she conducts comprehensive psycho-educational assessments and tailors therapy to each client, combining evidence-based interventions with a deep understanding of how the mind and body work together. Her body-based, neuroscience-informed approach helps clients process experiences in a way that supports lasting healing and growth.'
   },
   {
+    slug: 'melissa-raft',
+    name: 'Melissa Raft',
+    role: 'Educational Psychologist',
+    category: 'Child Development & Learning',
+    photo: img('melissa-raft'),
+    bookable: 'an educational psychology session with Melissa Raft',
+    tagline: 'Warm, collaborative and child-centred support for learning, school and emotional challenges.',
+    bio: 'Melissa is an Educational Psychologist and part of the multidisciplinary team at Our Village. With eight years in practice, she has a heart for supporting children who may find school, learning or navigating their emotions a little more challenging. Her approach is warm, collaborative, evidence-based and child-centred, taking time to understand the child behind the challenge as well as the family supporting them. From learning and developmental support to ADHD and attention-related challenges, autism spectrum support, specific learning disorder assessments, school readiness, psycho-educational, career and accommodations assessments, therapy and parental guidance, Melissa helps every child feel seen, supported and empowered to thrive.'
+  },
+  {
     slug: 'jessica-van-wyk',
     name: 'Jessica van Wyk',
     role: 'Baby & Toddler Stimulation Facilitator',
@@ -234,15 +244,6 @@ export const team: TeamMember[] = [
   },
 
   // ────────────────────────────── Support Team ──────────────────────────────
-  {
-    slug: 'dudu-receptionist',
-    name: 'Dudu',
-    role: 'Receptionist',
-    category: 'Support Team',
-    photo: img('dudu-receptionist'),
-    tagline: 'One of the friendly faces that makes Our Village feel like home.',
-    bio: 'Dudu is one of the friendly faces that makes Our Village feel like home. Known for her warm personality, helpful nature and genuine kindness, she has a special way of making every visitor feel welcomed and cared for — whether she’s assisting with appointments, answering questions or helping patients find their way.'
-  },
   {
     slug: 'beauty-office-assistant',
     name: 'Beauty',

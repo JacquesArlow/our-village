@@ -4,7 +4,7 @@ import { team } from '~/data/team'
 
 const site = useSite()
 const featured = team.filter((m) =>
-  ['andrea-swart', 'suzanne-de-beer', 'dr-natasha-bartie', 'cassandra-ruysch', 'danielle-skinner', 'monique-van-der-merwe', 'dr-celiane-van-der-westhuizen', 'alicia-coertze'].includes(m.slug)
+  ['andrea-swart', 'suzanne-de-beer', 'dr-natasha-bartie', 'cassandra-ruysch', 'melissa-raft', 'danielle-skinner', 'dr-celiane-van-der-westhuizen', 'alicia-coertze'].includes(m.slug)
 )
 
 const values = [
