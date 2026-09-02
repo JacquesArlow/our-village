@@ -1,6 +1,9 @@
 <script setup lang="ts">
 const site = useSite()
-useHead({ title: 'Contact Us — Our Village' })
+usePageSeo({
+  title: 'Contact Our Village | Family Wellness Pretoria',
+  description: 'Contact Our Village in Garsfontein, Pretoria to book family medical care, therapy, baby clinic services or antenatal classes.'
+})
 
 const cards = computed(() => [
   { label: 'Office Address', value: site.address, href: site.mapsUrl, icon: '📍' },

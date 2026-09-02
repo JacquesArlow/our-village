@@ -11,7 +11,47 @@ const fmtFull = (d: string) =>
 const fmtShort = (d: string) =>
   new Date(d + 'T00:00:00').toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
 
-useHead(() => ({ title: event.value ? `${event.value.title} — Our Village` : 'Event — Our Village' }))
+const siteUrl = (useRuntimeConfig().public.siteUrl as string).replace(/\/$/, '')
+const eventDescription = computed(() =>
+  event.value?.detail ||
+  (event.value
+    ? 'Find dates, details and booking information for ' + event.value.title + ' at Our Village in Pretoria.'
+    : 'This Our Village event is no longer available.')
+)
+const eventSchema = computed(() => event.value
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      name: event.value.title,
+      description: eventDescription.value,
+      startDate: event.value.startDate,
+      endDate: event.value.endDate || event.value.startDate,
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      eventStatus: 'https://schema.org/EventScheduled',
+      url: siteUrl + '/calendar/event/' + event.value.id,
+      location: {
+        '@type': 'Place',
+        name: 'Our Village',
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: '525 Alsation Drive',
+          addressLocality: 'Garsfontein',
+          addressRegion: 'Gauteng',
+          addressCountry: 'ZA'
+        }
+      },
+      organizer: { '@id': siteUrl + '/#business' }
+    }
+  : undefined
+)
+
+usePageSeo({
+  title: computed(() => event.value ? event.value.title + ' | Our Village Event' : 'Event Not Found | Our Village'),
+  description: eventDescription,
+  type: 'article',
+  noindex: computed(() => !!error.value || !event.value),
+  schema: eventSchema
+})
 </script>
 
 <template>
@@ -75,6 +115,7 @@ useHead(() => ({ title: event.value ? `${event.value.title} — Our Village` : '
           :form-file-name="event.formFileName"
           :booking-form-variant="event.bookingFormVariant"
           :booking-cost-label="event.bookingCostLabel"
+          :form-dropdown="event.formDropdown"
         />
       </div>
     </div>

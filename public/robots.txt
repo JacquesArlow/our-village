@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /village-desk
+
+Sitemap: https://www.our-village.co.za/sitemap.xml

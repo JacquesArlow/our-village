@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BookingFormVariant } from '~~/shared/calendar'
+import type { BookingFormVariant, FormDropdownConfig } from '~~/shared/calendar'
 
 const props = defineProps<{
   eventId?: string
@@ -7,6 +7,7 @@ const props = defineProps<{
   formFileName?: string | null
   bookingFormVariant?: BookingFormVariant | null
   bookingCostLabel?: string | null
+  formDropdown?: FormDropdownConfig | null
 }>()
 const cfg = useRuntimeConfig().public
 
@@ -21,6 +22,8 @@ const f = reactive({
   babyDateOfBirth: '',
   message: ''
 })
+const dropdownSingle = ref('')
+const dropdownMulti = ref<string[]>([])
 const isGrowthScreening = computed(() =>
   props.bookingFormVariant === 'growth_screening'
   || (!props.bookingFormVariant && /growth\s*ot|developmental\s+screenings?/i.test(props.eventTitle || ''))
@@ -62,6 +65,7 @@ onMounted(() => {
 
 const inputClass =
   'w-full rounded-field border border-base-300 bg-base-100 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20'
+const dropdown = computed(() => props.formDropdown?.enabled && props.formDropdown.options.length ? props.formDropdown : null)
 
 function chooseCompletedForm(e: Event) {
   const input = e.target as HTMLInputElement
@@ -88,16 +92,23 @@ async function submit() {
   if (!tsToken.value) { err.value = 'Just a moment — the spam check is still loading.'; return }
   state.value = 'submitting'
   try {
-    let body: Record<string, string | undefined> | FormData
+    let body: Record<string, string | string[] | undefined> | FormData
     const payload = {
       ...f,
       eventId: props.eventId,
       eventTitle: props.eventTitle,
+      dropdownAnswer: dropdown.value?.selectionMode === 'multiple' ? dropdownMulti.value : dropdownSingle.value,
       turnstileToken: tsToken.value
     }
     if (hasEventForm.value && completedFormFile.value) {
       const formData = new FormData()
-      Object.entries(payload).forEach(([key, value]) => formData.set(key, value ?? ''))
+      Object.entries(payload).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach(item => formData.append(key, item))
+        } else {
+          formData.set(key, value ?? '')
+        }
+      })
       formData.set('completedForm', completedFormFile.value)
       body = formData
     } else {
@@ -202,6 +213,30 @@ async function submit() {
           <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Number of guests</span>
           <input v-model="f.guests" type="number" min="1" :class="inputClass" placeholder="e.g. 2" />
         </label>
+      </div>
+
+      <div v-if="dropdown" class="space-y-2">
+        <span class="block text-xs font-semibold uppercase tracking-wide text-base-content/55">{{ dropdown.label }}</span>
+
+        <select
+          v-if="dropdown.selectionMode === 'single'"
+          v-model="dropdownSingle"
+          :class="inputClass"
+        >
+          <option value="">Please select</option>
+          <option v-for="option in dropdown.options" :key="option" :value="option">{{ option }}</option>
+        </select>
+
+        <div v-else class="grid gap-2 sm:grid-cols-2">
+          <label
+            v-for="option in dropdown.options"
+            :key="option"
+            class="flex cursor-pointer items-center gap-2 rounded-field border border-base-300 px-3 py-2 text-sm text-base-content/75 transition hover:border-primary/60"
+          >
+            <input v-model="dropdownMulti" type="checkbox" :value="option" class="checkbox checkbox-primary checkbox-sm" />
+            <span>{{ option }}</span>
+          </label>
+        </div>
       </div>
 
       <label class="block">

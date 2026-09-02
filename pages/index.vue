@@ -13,7 +13,11 @@ const values = [
   { title: 'Warm, human care', text: 'A safe, welcoming space where every question is valid and you feel heard.' }
 ]
 
-useHead({ title: 'Our Village — Care That Grows With You' })
+usePageSeo({
+  title: 'Family Health & Wellness in Pretoria | Our Village',
+  description: 'Medical care, family therapy, baby clinics and antenatal classes from a multidisciplinary team in Garsfontein, Pretoria — all under one roof.',
+  path: '/'
+})
 </script>
 
 <template>

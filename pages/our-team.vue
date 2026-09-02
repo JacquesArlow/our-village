@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { team, teamCategories } from '~/data/team'
 
-useHead({ title: 'Our Team — Our Village' })
+usePageSeo({
+  title: 'Health & Therapy Professionals | Our Village Pretoria',
+  description: 'Meet Our Village’s multidisciplinary team of doctors, nurses, therapists, psychologists and family wellness professionals in Pretoria.'
+})
 
 const active = ref<string>('All')
 const filters = ['All', ...teamCategories]

@@ -1,5 +1,9 @@
 <script setup lang="ts">
-useHead({ title: 'Online Antenatal Classes — Our Village' })
+usePageSeo({
+  title: 'Online Antenatal Classes South Africa | Our Village',
+  description: 'Learn about birth, breastfeeding and newborn care with flexible, self-paced online antenatal classes and lifetime access from Our Village.',
+  image: '/antenatal/online-hero.webp'
+})
 
 const tab = ref<'get' | 'how'>('get')
 

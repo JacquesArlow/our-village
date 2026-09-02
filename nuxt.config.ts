@@ -17,7 +17,7 @@ export default defineNuxtConfig({
       // below is the temporary number — swap when Jacques sends the real one.
       whatsappNumber: '27798279327',
       whatsappDefaultText: "Hi Our Village, I'd like to book an appointment.",
-      siteUrl: 'https://our-wellness.arlow.co.za',
+      siteUrl: 'https://www.our-village.co.za',
       // Cloudflare Turnstile site key (PUBLIC — safe to ship). Overridable via
       // NUXT_PUBLIC_TURNSTILE_SITE_KEY. The SECRET key is server-only (env).
       turnstileSiteKey: '0x4AAAAAADtYo8RIuX2zPY2f'
@@ -52,5 +52,10 @@ export default defineNuxtConfig({
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' }
       ]
     }
+  },
+  routeRules: {
+    '/api/**': { headers: { 'x-robots-tag': 'noindex, nofollow' } },
+    '/village-desk': { headers: { 'x-robots-tag': 'noindex, nofollow' } },
+    '/village-desk/**': { headers: { 'x-robots-tag': 'noindex, nofollow' } }
   }
 })

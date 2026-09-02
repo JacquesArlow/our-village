@@ -2,7 +2,10 @@
 import { serviceCategories } from '~/data/services'
 import { team } from '~/data/team'
 
-useHead({ title: 'Our Services — Our Village' })
+usePageSeo({
+  title: 'Family Health & Therapy Services | Our Village',
+  description: 'Explore family medical care, baby clinics, occupational therapy, psychology, nutrition, physiotherapy and more in Garsfontein, Pretoria.'
+})
 
 const therapistsFor = (category: string) =>
   team.filter((m) => m.category === category && m.bookable)

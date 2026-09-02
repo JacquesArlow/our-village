@@ -2,6 +2,7 @@ import { and, eq, lte, desc } from 'drizzle-orm'
 import { db } from '~~/server/db/client'
 import { event, monthBlock, booking, formSubmission } from '~~/server/db/schema'
 import type { EventInsert, MonthBlockInsert, EventSelect, BookingInsert, FormSubmissionInsert } from '~~/server/db/schema'
+import type { FormDropdownConfig } from '~~/shared/calendar'
 import { monthRange } from '~~/shared/calendar'
 
 const now = () => Date.now()
@@ -10,6 +11,64 @@ const id = () => crypto.randomUUID()
 function toPublicEvent(e: EventSelect) {
   const { staff, formFilePath, createdAt, updatedAt, ...pub } = e
   return pub
+}
+
+function cleanText(value: unknown, max = 120) {
+  return typeof value === 'string' ? value.trim().slice(0, max) : ''
+}
+
+function uniqueOptions(values: unknown) {
+  if (!Array.isArray(values)) return []
+  const seen = new Set<string>()
+  return values
+    .map(v => cleanText(v, 80))
+    .filter((v) => {
+      if (!v || seen.has(v.toLowerCase())) return false
+      seen.add(v.toLowerCase())
+      return true
+    })
+    .slice(0, 50)
+}
+
+export function normalizeFormDropdown(input: unknown): FormDropdownConfig | null {
+  const cfg = input as Partial<FormDropdownConfig> | null | undefined
+  if (!cfg?.enabled) return null
+
+  const label = cleanText(cfg.label)
+  const options = uniqueOptions(cfg.options)
+  if (!label) throw createError({ statusCode: 400, statusMessage: 'Dropdown label required' })
+  if (!options.length) throw createError({ statusCode: 400, statusMessage: 'Add at least one dropdown option' })
+
+  return {
+    enabled: true,
+    label,
+    selectionMode: cfg.selectionMode === 'multiple' ? 'multiple' : 'single',
+    options
+  }
+}
+
+function normalizeDropdownResponse(cfg: FormDropdownConfig | null | undefined, value: unknown) {
+  if (!cfg?.enabled) return null
+
+  const allowed = new Set(cfg.options.map(option => option.toLowerCase()))
+  const optionFrom = (v: unknown) => {
+    const option = cleanText(v, 80)
+    return option && allowed.has(option.toLowerCase()) ? option : ''
+  }
+
+  if (cfg.selectionMode === 'multiple') {
+    const values = uniqueOptions(Array.isArray(value) ? value : [])
+      .map(optionFrom)
+      .filter(Boolean)
+    return values.length
+      ? { dropdown: { label: cfg.label, selectionMode: cfg.selectionMode, value: values } }
+      : null
+  }
+
+  const option = optionFrom(Array.isArray(value) ? value[0] : value)
+  return option
+    ? { dropdown: { label: cfg.label, selectionMode: cfg.selectionMode, value: option } }
+    : null
 }
 
 export async function getMonth(year: number, month: number, opts: { publicOnly?: boolean } = {}) {
@@ -52,7 +111,7 @@ export async function getEvent(eventId: string) {
   return rows[0] ?? null
 }
 
-export async function createEvent(input: Partial<EventInsert> & { startDate: string; title: string }) {
+export async function createCalendarEvent(input: Partial<EventInsert> & { startDate: string; title: string }) {
   const row: EventInsert = {
     id: id(),
     startDate: input.startDate,
@@ -67,6 +126,7 @@ export async function createEvent(input: Partial<EventInsert> & { startDate: str
     formUploadedAt: input.formUploadedAt ?? null,
     bookingFormVariant: input.bookingFormVariant ?? null,
     bookingCostLabel: input.bookingCostLabel ?? null,
+    formDropdown: normalizeFormDropdown(input.formDropdown),
     color: input.color ?? 'default',
     isHighlight: input.isHighlight ?? false,
     isPublic: input.isPublic ?? false,
@@ -77,14 +137,17 @@ export async function createEvent(input: Partial<EventInsert> & { startDate: str
   return row
 }
 
-export async function updateEvent(eventId: string, patch: Partial<EventInsert>) {
-  await db.update(event).set({ ...patch, updatedAt: now() }).where(eq(event.id, eventId))
+export async function updateCalendarEvent(eventId: string, patch: Partial<EventInsert>) {
+  const normalized = 'formDropdown' in patch
+    ? { ...patch, formDropdown: normalizeFormDropdown(patch.formDropdown) }
+    : patch
+  await db.update(event).set({ ...normalized, updatedAt: now() }).where(eq(event.id, eventId))
 }
 
 export async function setEventFormFile(eventId: string, file: {
   fileName: string; filePath: string; fileMime: string; fileSize: number
 }) {
-  await updateEvent(eventId, {
+  await updateCalendarEvent(eventId, {
     formFileName: file.fileName,
     formFilePath: file.filePath,
     formFileMime: file.fileMime,
@@ -94,7 +157,7 @@ export async function setEventFormFile(eventId: string, file: {
 }
 
 export async function clearEventFormFile(eventId: string) {
-  await updateEvent(eventId, {
+  await updateCalendarEvent(eventId, {
     formFileName: null,
     formFilePath: null,
     formFileMime: null,
@@ -103,7 +166,7 @@ export async function clearEventFormFile(eventId: string) {
   })
 }
 
-export async function deleteEvent(eventId: string) {
+export async function deleteCalendarEvent(eventId: string) {
   await db.delete(event).where(eq(event.id, eventId))
 }
 
@@ -138,7 +201,10 @@ export async function createBooking(input: {
   guests?: number | null
   babyName?: string | null; babySurname?: string | null; babyDateOfBirth?: string | null
   message?: string | null
+  dropdownAnswer?: string | string[] | null
 }) {
+  const eventRow = input.eventId ? await getEvent(input.eventId) : null
+  const formResponse = normalizeDropdownResponse(eventRow?.formDropdown, input.dropdownAnswer)
   const row: BookingInsert = {
     id: id(),
     eventId: input.eventId ?? null,
@@ -152,6 +218,7 @@ export async function createBooking(input: {
     babySurname: input.babySurname ?? null,
     babyDateOfBirth: input.babyDateOfBirth ?? null,
     message: input.message ?? null,
+    formResponse,
     createdAt: now()
   }
   await db.insert(booking).values(row)

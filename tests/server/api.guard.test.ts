@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 
-const { requireAdmin, createEvent } = vi.hoisted(() => {
+const { requireAdmin, createCalendarEvent } = vi.hoisted(() => {
   // These globalThis stubs must be set before the handler module is imported,
   // because ESM imports are hoisted above module body statements.
   // vi.hoisted() runs before any imports, so this is the correct place.
@@ -10,20 +10,20 @@ const { requireAdmin, createEvent } = vi.hoisted(() => {
 
   return {
     requireAdmin: vi.fn(),
-    createEvent: vi.fn().mockResolvedValue({ id: 'x' }),
+    createCalendarEvent: vi.fn().mockResolvedValue({ id: 'x' }),
   }
 })
 
 vi.mock('~~/server/utils/requireAdmin', () => ({ requireAdmin }))
-vi.mock('~~/server/utils/calendarRepo', () => ({ createEvent }))
+vi.mock('~~/server/utils/calendarRepo', () => ({ createCalendarEvent }))
 
 import handler from '~~/server/api/admin/event.post'
 
 describe('admin event.post', () => {
-  it('calls requireAdmin before createEvent', async () => {
+  it('calls requireAdmin before createCalendarEvent', async () => {
     const order: string[] = []
     requireAdmin.mockImplementation(async () => { order.push('guard') })
-    createEvent.mockImplementation(async () => { order.push('create'); return { id: 'x' } })
+    createCalendarEvent.mockImplementation(async () => { order.push('create'); return { id: 'x' } })
     await handler({} as any)
     expect(order).toEqual(['guard', 'create'])
   })

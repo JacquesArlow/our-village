@@ -1,6 +1,10 @@
 <script setup lang="ts">
 const site = useSite()
-useHead({ title: 'In-Person Antenatal Classes — Our Village' })
+usePageSeo({
+  title: 'In-Person Antenatal Classes Pretoria | Our Village',
+  description: 'Join practical, expert-led antenatal classes for couples in Pretoria and feel informed, confident and supported for birth and early parenthood.',
+  image: '/antenatal/hands-on.webp'
+})
 
 const reasons = [
   { img: '/antenatal/real-connection.webp', t: 'Real-life connection', d: 'Meet other parents-to-be and build a supportive community.' },

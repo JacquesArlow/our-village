@@ -1,4 +1,13 @@
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
+import type { FormDropdownConfig } from '~~/shared/calendar'
+
+export interface BookingFormResponse {
+  dropdown?: {
+    label: string
+    selectionMode: FormDropdownConfig['selectionMode']
+    value: string | string[]
+  }
+}
 
 export const event = sqliteTable('event', {
   id: text('id').primaryKey(),
@@ -14,6 +23,7 @@ export const event = sqliteTable('event', {
   formUploadedAt: integer('form_uploaded_at'),
   bookingFormVariant: text('booking_form_variant'),
   bookingCostLabel: text('booking_cost_label'),
+  formDropdown: text('form_dropdown', { mode: 'json' }).$type<FormDropdownConfig | null>(),
   color: text('color').notNull().default('default'),
   isHighlight: integer('is_highlight', { mode: 'boolean' }).notNull().default(false),
   isPublic: integer('is_public', { mode: 'boolean' }).notNull().default(false),
@@ -47,6 +57,7 @@ export const booking = sqliteTable('booking', {
   babySurname: text('baby_surname'),
   babyDateOfBirth: text('baby_date_of_birth'),
   message: text('message'),
+  formResponse: text('form_response', { mode: 'json' }).$type<BookingFormResponse | null>(),
   createdAt: integer('created_at').notNull()
 })
 

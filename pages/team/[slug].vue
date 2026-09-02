@@ -8,7 +8,29 @@ if (!member.value) {
   throw createError({ statusCode: 404, statusMessage: 'Team member not found', fatal: true })
 }
 
-useHead({ title: () => `${member.value!.name} — Our Village` })
+const siteUrl = (useRuntimeConfig().public.siteUrl as string).replace(/\/$/, '')
+const seoTitle = computed(() => member.value!.name + ', ' + member.value!.role + ' | Our Village')
+const seoDescription = computed(() =>
+  member.value!.name + ' is a ' + member.value!.role + ' at Our Village in Pretoria. ' + member.value!.tagline
+)
+const personSchema = computed(() => ({
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: member.value!.name,
+  jobTitle: member.value!.role,
+  description: member.value!.bio,
+  image: member.value!.photo ? siteUrl + member.value!.photo : siteUrl + '/logo.png',
+  url: siteUrl + '/team/' + member.value!.slug,
+  worksFor: { '@id': siteUrl + '/#business' }
+}))
+
+usePageSeo({
+  title: seoTitle,
+  description: seoDescription,
+  image: computed(() => member.value!.photo || '/logo.png'),
+  type: 'profile',
+  schema: personSchema
+})
 
 const related = computed(() =>
   team.filter((m) => m.category === member.value!.category && m.slug !== member.value!.slug).slice(0, 4)

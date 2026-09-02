@@ -3,7 +3,10 @@ import type { EventRow } from '~~/shared/calendar'
 import { colorClass, useMonthName } from '~~/composables/useCalendar'
 
 const { data } = await useFetch<EventRow[]>('/api/calendar/events')
-useHead({ title: 'All events — Our Village' })
+usePageSeo({
+  title: 'Upcoming Family Wellness Events | Our Village',
+  description: 'See all upcoming Our Village events, including antenatal sessions, parent workshops and family wellness activities in Pretoria.'
+})
 
 // Events arrive newest → oldest; group sequentially by year-month.
 const groups = computed(() => {

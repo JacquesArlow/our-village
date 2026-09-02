@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { EventRow, ColorToken, BookingFormVariant } from '~~/shared/calendar'
+import type { EventRow, ColorToken, BookingFormVariant, FormDropdownConfig } from '~~/shared/calendar'
 import { COLOR_TOKENS } from '~~/shared/calendar'
 
 const props = defineProps<{ date: string; model?: EventRow | null }>()
@@ -20,6 +20,17 @@ const f = reactive({
   formUploadedAt: props.model?.formUploadedAt ?? null,
   bookingFormVariant: (props.model?.bookingFormVariant ?? inferredVariant) as BookingFormVariant,
   bookingCostLabel: props.model?.bookingCostLabel ?? (inferredVariant === 'growth_screening' ? 'R375' : ''),
+  formDropdown: props.model?.formDropdown
+    ? {
+        ...props.model.formDropdown,
+        options: [...props.model.formDropdown.options]
+      }
+    : {
+        enabled: false,
+        label: '',
+        selectionMode: 'single',
+        options: ['']
+      } as FormDropdownConfig,
   color: (props.model?.color ?? 'default') as ColorToken,
   isHighlight: props.model?.isHighlight ?? false,
   isPublic: props.model?.isPublic ?? false
@@ -32,6 +43,26 @@ const selectedPdf = ref<File | null>(null)
 
 const SWATCH: Record<ColorToken, string> = {
   default: 'bg-base-300', sage: 'bg-primary', pink: 'bg-accent', red: 'bg-error', blue: 'bg-info'
+}
+
+function addDropdownOption() {
+  f.formDropdown.options.push('')
+}
+
+function removeDropdownOption(index: number) {
+  f.formDropdown.options.splice(index, 1)
+  if (!f.formDropdown.options.length) f.formDropdown.options.push('')
+}
+
+function cleanDropdown(): FormDropdownConfig | null {
+  if (!f.formDropdown.enabled) return null
+  const options = f.formDropdown.options.map(option => option.trim()).filter(Boolean)
+  return {
+    enabled: true,
+    label: f.formDropdown.label.trim(),
+    selectionMode: f.formDropdown.selectionMode,
+    options
+  }
 }
 
 async function save() {
@@ -47,6 +78,7 @@ async function save() {
       staff: f.staff || null,
       bookingFormVariant: f.bookingFormVariant,
       bookingCostLabel: f.bookingFormVariant === 'growth_screening' ? (f.bookingCostLabel || 'R375') : null,
+      formDropdown: cleanDropdown(),
       color: f.color,
       isHighlight: f.isHighlight,
       isPublic: f.isPublic
@@ -187,6 +219,54 @@ const fmtBytes = (bytes: number | null) => bytes ? `${(bytes / 1024 / 1024).toFi
           <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Cost label</span>
           <input v-model="f.bookingCostLabel" class="w-full rounded-field border border-base-300 bg-base-100 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="R375" />
         </label>
+      </div>
+
+      <div class="mt-4 space-y-3 border-t border-base-200 pt-4">
+        <label class="flex cursor-pointer items-center justify-between gap-4 rounded-field border border-base-300 px-3 py-2.5">
+          <span class="text-sm">
+            <span class="font-semibold text-base-content/80">Dropdown question</span>
+            <span class="block text-xs text-base-content/45">Add a single or multi-select field to this registration form</span>
+          </span>
+          <input v-model="f.formDropdown.enabled" type="checkbox" class="toggle toggle-primary toggle-sm" />
+        </label>
+
+        <div v-if="f.formDropdown.enabled" class="space-y-3">
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Question label</span>
+            <input v-model="f.formDropdown.label" class="w-full rounded-field border border-base-300 bg-base-100 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="e.g. Which sessions are you interested in?" />
+          </label>
+
+          <div>
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Selection type</span>
+            <div class="grid grid-cols-2 gap-2">
+              <label
+                class="flex cursor-pointer items-center gap-2 rounded-field border px-3 py-2 text-sm transition"
+                :class="f.formDropdown.selectionMode === 'single' ? 'border-primary bg-primary/5 text-secondary' : 'border-base-300 text-base-content/70'"
+              >
+                <input v-model="f.formDropdown.selectionMode" type="radio" value="single" class="radio radio-primary radio-xs" />
+                Single select
+              </label>
+              <label
+                class="flex cursor-pointer items-center gap-2 rounded-field border px-3 py-2 text-sm transition"
+                :class="f.formDropdown.selectionMode === 'multiple' ? 'border-primary bg-primary/5 text-secondary' : 'border-base-300 text-base-content/70'"
+              >
+                <input v-model="f.formDropdown.selectionMode" type="radio" value="multiple" class="radio radio-primary radio-xs" />
+                Multi select
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Options</span>
+            <div class="space-y-2">
+              <div v-for="(_option, index) in f.formDropdown.options" :key="index" class="flex gap-2">
+                <input v-model="f.formDropdown.options[index]" class="min-w-0 flex-1 rounded-field border border-base-300 bg-base-100 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" :placeholder="`Option ${index + 1}`" />
+                <button class="btn btn-ghost btn-sm px-2 text-error" type="button" aria-label="Remove option" @click="removeDropdownOption(index)">Remove</button>
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm mt-2" type="button" @click="addDropdownOption">Add option</button>
+          </div>
+        </div>
       </div>
     </div>
 

@@ -4,6 +4,9 @@ interface Booking {
   guests: number | null
   babyName: string | null; babySurname: string | null; babyDateOfBirth: string | null
   message: string | null; createdAt: number
+  formResponse: {
+    dropdown?: { label: string; selectionMode: 'single' | 'multiple'; value: string | string[] }
+  } | null
 }
 const props = defineProps<{ eventId: string }>()
 
@@ -21,6 +24,11 @@ const fmt = (ms: number) =>
   new Date(ms).toLocaleString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 const fmtDate = (d: string | null) =>
   d ? new Date(d + 'T00:00:00').toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'
+const fmtResponse = (b: Booking) => {
+  const dropdown = b.formResponse?.dropdown
+  if (!dropdown) return '-'
+  return Array.isArray(dropdown.value) ? dropdown.value.join(', ') : dropdown.value
+}
 </script>
 
 <template>
@@ -47,6 +55,7 @@ const fmtDate = (d: string | null) =>
             <th class="py-2 pr-3">Guests</th>
             <th class="py-2 pr-3">Baby</th>
             <th class="py-2 pr-3 whitespace-nowrap">Baby DOB</th>
+            <th class="py-2 pr-3">Dropdown</th>
             <th class="py-2 pr-3">Message</th>
             <th class="py-2 pr-3 whitespace-nowrap">Submitted</th>
           </tr>
@@ -60,6 +69,10 @@ const fmtDate = (d: string | null) =>
             <td class="py-2 pr-3 text-center">{{ b.guests ?? '-' }}</td>
             <td class="py-2 pr-3">{{ [b.babyName, b.babySurname].filter(Boolean).join(' ') || '-' }}</td>
             <td class="py-2 pr-3 whitespace-nowrap">{{ fmtDate(b.babyDateOfBirth) }}</td>
+            <td class="py-2 pr-3 text-base-content/70">
+              <span v-if="b.formResponse?.dropdown" class="block text-[11px] font-semibold uppercase tracking-wide text-base-content/45">{{ b.formResponse.dropdown.label }}</span>
+              {{ fmtResponse(b) }}
+            </td>
             <td class="py-2 pr-3 text-base-content/70">{{ b.message || '—' }}</td>
             <td class="py-2 pr-3 whitespace-nowrap text-base-content/50">{{ fmt(b.createdAt) }}</td>
           </tr>

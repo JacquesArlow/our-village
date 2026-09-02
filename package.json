@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx server/db/migrate.ts"
+    "db:migrate": "DB_MIGRATE_CLI=1 tsx server/db/migrate.ts"
   },
   "devDependencies": {
     "@nuxt/test-utils": "^4.0.3",

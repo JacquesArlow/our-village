@@ -3,6 +3,15 @@ export const COLOR_TOKENS: ColorToken[] = ['sage', 'pink', 'red', 'blue', 'defau
 
 export type BookingFormVariant = 'standard' | 'growth_screening'
 
+export type FormDropdownSelectionMode = 'single' | 'multiple'
+
+export interface FormDropdownConfig {
+  enabled: boolean
+  label: string
+  selectionMode: FormDropdownSelectionMode
+  options: string[]
+}
+
 export type BlockSection = 'important_dates' | 'hot_topics' | 'focus' | 'training'
 export const BLOCK_SECTIONS: BlockSection[] = ['important_dates', 'hot_topics', 'focus', 'training']
 
@@ -43,6 +52,7 @@ export interface EventRow {
   formUploadedAt: number | null
   bookingFormVariant: BookingFormVariant | null
   bookingCostLabel: string | null
+  formDropdown: FormDropdownConfig | null
   color: ColorToken
   isHighlight: boolean
   isPublic: boolean

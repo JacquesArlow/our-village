@@ -14,6 +14,10 @@ export default defineEventHandler(async (event) => {
   if (isMultipart) {
     const parts = await readMultipartFormData(event)
     const getText = (name: string) => parts?.find(p => p.name === name)?.data.toString().trim() || ''
+    const getAllText = (name: string) => parts
+      ?.filter(p => p.name === name)
+      .map(p => p.data.toString().trim())
+      .filter(Boolean) || []
     body = {
       name: getText('name'),
       surname: getText('surname'),
@@ -26,6 +30,7 @@ export default defineEventHandler(async (event) => {
       message: getText('message'),
       eventId: getText('eventId'),
       eventTitle: getText('eventTitle'),
+      dropdownAnswer: getAllText('dropdownAnswer'),
       turnstileToken: getText('turnstileToken')
     }
     filePart = parts?.find(p => p.name === 'completedForm' || p.name === 'file')
@@ -85,7 +90,7 @@ export default defineEventHandler(async (event) => {
     submittedFormFileName = stored.fileName
   }
 
-  await createBooking({
+  const booking = await createBooking({
     eventId,
     eventTitle: bookingEvent?.title || eventTitle,
     name, surname, email, phone,
@@ -93,7 +98,8 @@ export default defineEventHandler(async (event) => {
     babyName: isGrowthScreening ? babyName : null,
     babySurname: isGrowthScreening ? babySurname : null,
     babyDateOfBirth: isGrowthScreening ? babyDateOfBirth : null,
-    message: str(body?.message) || null
+    message: str(body?.message) || null,
+    dropdownAnswer: body?.dropdownAnswer as string | string[] | null | undefined
   })
 
   // Notify marketing (best-effort — the booking is already saved & visible in admin).
@@ -111,6 +117,8 @@ export default defineEventHandler(async (event) => {
     const formLines = submittedFormFileName
       ? [`Completed form: ${submittedFormFileName}`]
       : []
+    const dropdown = booking.formResponse?.dropdown
+    const dropdownAnswer = Array.isArray(dropdown?.value) ? dropdown.value.join(', ') : dropdown?.value
     const lines = [
       `New booking${eventTitle ? ` for: ${eventTitle}` : ''}`,
       '',
@@ -118,6 +126,7 @@ export default defineEventHandler(async (event) => {
       `Email:  ${email || '(not given)'}`,
       `Phone:  ${phone || '(not given)'}`,
       ...eventLines,
+      dropdown && dropdownAnswer ? `${dropdown.label}: ${dropdownAnswer}` : '',
       ...formLines,
       body?.message ? `\nMessage:\n${str(body?.message)}` : ''
     ].filter(Boolean)

@@ -1,5 +1,9 @@
 <script setup lang="ts">
-useHead({ title: 'Antenatal Classes — Our Village' })
+usePageSeo({
+  title: 'Antenatal Classes in Pretoria & Online | Our Village',
+  description: 'Prepare for birth and newborn life with supportive, expert-led antenatal classes. Choose in-person classes in Pretoria or learn online at your pace.',
+  image: '/antenatal/holistic.webp'
+})
 </script>
 
 <template>
