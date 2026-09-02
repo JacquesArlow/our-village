@@ -35,6 +35,7 @@ usePageSeo({
 
 <template>
   <section class="container-px section-y">
+    <h1 class="sr-only">Our Village family wellness events calendar</h1>
     <div ref="calRef" :class="isFullscreen ? 'overflow-auto bg-base-100 p-4 sm:p-8' : ''">
       <!-- Header: stacks on mobile (no overflow); logo left + actions right on desktop -->
       <div class="relative mb-6 flex flex-col items-center gap-3">

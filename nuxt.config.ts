@@ -25,7 +25,7 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      htmlAttrs: { lang: 'en', 'data-theme': 'ourvillage' },
+      htmlAttrs: { lang: 'en-ZA', 'data-theme': 'ourvillage' },
       title: 'Our Village — Care That Grows With You',
       meta: [
         { charset: 'utf-8' },

@@ -11,46 +11,23 @@ const fmtFull = (d: string) =>
 const fmtShort = (d: string) =>
   new Date(d + 'T00:00:00').toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
 
-const siteUrl = (useRuntimeConfig().public.siteUrl as string).replace(/\/$/, '')
 const eventDescription = computed(() =>
   event.value?.detail ||
   (event.value
     ? 'Find dates, details and booking information for ' + event.value.title + ' at Our Village in Pretoria.'
     : 'This Our Village event is no longer available.')
 )
-const eventSchema = computed(() => event.value
-  ? {
-      '@context': 'https://schema.org',
-      '@type': 'Event',
-      name: event.value.title,
-      description: eventDescription.value,
-      startDate: event.value.startDate,
-      endDate: event.value.endDate || event.value.startDate,
-      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-      eventStatus: 'https://schema.org/EventScheduled',
-      url: siteUrl + '/calendar/event/' + event.value.id,
-      location: {
-        '@type': 'Place',
-        name: 'Our Village',
-        address: {
-          '@type': 'PostalAddress',
-          streetAddress: '525 Alsation Drive',
-          addressLocality: 'Garsfontein',
-          addressRegion: 'Gauteng',
-          addressCountry: 'ZA'
-        }
-      },
-      organizer: { '@id': siteUrl + '/#business' }
-    }
-  : undefined
-)
+if (import.meta.server && !event.value) {
+  const requestEvent = useRequestEvent()
+  const status = (error.value as { statusCode?: number } | null)?.statusCode || 404
+  if (requestEvent) setResponseStatus(requestEvent, status, status === 404 ? 'Event not found' : 'Unable to load event')
+}
 
 usePageSeo({
   title: computed(() => event.value ? event.value.title + ' | Our Village Event' : 'Event Not Found | Our Village'),
   description: eventDescription,
   type: 'article',
-  noindex: computed(() => !!error.value || !event.value),
-  schema: eventSchema
+  noindex: computed(() => !!error.value || !event.value)
 })
 </script>
 
@@ -61,7 +38,7 @@ usePageSeo({
 
       <!-- Not found / unpublished -->
       <div v-if="error || !event" class="mt-6 rounded-box border border-dashed border-base-300 px-6 py-16 text-center">
-        <p class="font-script text-4xl text-secondary">Event not found</p>
+        <h1 class="font-script text-4xl text-secondary">Event not found</h1>
         <p class="mt-2 text-base-content/55">This event may have been removed or isn’t published yet.</p>
         <NuxtLink to="/calendar" class="btn btn-primary btn-sm mt-6">View the calendar</NuxtLink>
       </div>
