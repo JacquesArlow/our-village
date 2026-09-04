@@ -245,6 +245,15 @@ export const team: TeamMember[] = [
 
   // ────────────────────────────── Support Team ──────────────────────────────
   {
+    slug: 'didi-moima',
+    name: 'Didi Moima',
+    role: 'Receptionist',
+    category: 'Support Team',
+    photo: img('didi-moima'),
+    tagline: 'A warm welcome and helpful support from the moment families arrive.',
+    bio: 'Didi is the friendly face at reception, helping families feel welcomed, supported and cared for from the moment they arrive at Our Village. She assists with day-to-day front desk support and helps keep visits calm, organised and personal.'
+  },
+  {
     slug: 'beauty-office-assistant',
     name: 'Beauty',
     role: 'Cleaner & Office Assistant',
