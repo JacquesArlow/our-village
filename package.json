@@ -2,6 +2,9 @@
   "name": "our-village-web",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "^22.19.0 || ^24.11.0 || >=26.0.0"
+  },
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",
@@ -14,22 +17,20 @@
     "db:migrate": "DB_MIGRATE_CLI=1 tsx server/db/migrate.ts"
   },
   "devDependencies": {
-    "@nuxt/test-utils": "^4.0.3",
-    "@types/nodemailer": "^8.0.1",
     "drizzle-kit": "^0.31.10",
-    "happy-dom": "^20.10.6",
-    "nuxt": "^3.14.1592",
-    "tsx": "^4.22.4",
-    "vitest": "^4.1.9"
+    "nuxt": "^4.5.2",
+    "tsx": "^4.23.13",
+    "vitest": "^4.1.11"
   },
   "dependencies": {
-    "@libsql/client": "^0.17.4",
-    "@tailwindcss/vite": "^4.3.1",
-    "better-auth": "^1.6.22",
-    "daisyui": "^5.5.23",
+    "@libsql/client": "^0.18.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "better-auth": "^1.7.2",
+    "daisyui": "^5.7.28",
     "drizzle-orm": "^0.45.2",
-    "nodemailer": "^9.0.3",
+    "nodemailer": "^10.0.0",
     "qrcode": "^1.5.4",
-    "tailwindcss": "^4.3.1"
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.2.2"
   }
 }
