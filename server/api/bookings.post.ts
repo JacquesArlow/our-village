@@ -133,7 +133,6 @@ export default defineEventHandler(async (event) => {
     try {
       await sendMail({
         to, from,
-        replyTo: email ? `${full} <${email}>` : undefined,
         subject: `New booking${eventTitle ? `: ${eventTitle}` : ''} — ${full}`,
         text: lines.join('\n')
       })

@@ -49,7 +49,6 @@ export default defineEventHandler(async (event) => {
     try {
       await sendMail({
         to, from,
-        replyTo: email ? `${name} <${email}>` : undefined,
         subject: `Completed form uploaded: ${row.title} - ${name}`,
         text: [
           `Completed form uploaded for: ${row.title}`,
