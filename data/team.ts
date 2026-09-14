@@ -213,6 +213,16 @@ export const team: TeamMember[] = [
     bio: 'Alicia is a Counselling Psychologist who provides a warm, compassionate and collaborative space for adolescents and adults navigating life’s challenges — including anxiety, depression, trauma, grief, burnout, relationship difficulties, life transitions and self-esteem. Her approach is deeply person-centred, grounded in the belief that healing begins when people feel genuinely seen, heard and understood. She combines empathy with evidence-based techniques, tailoring each session to her clients’ unique needs, strengths and goals.'
   },
   {
+    slug: 'anneke-bothma',
+    name: 'Anneke Bothma',
+    role: 'EQ Expert & Relationship Coach',
+    category: 'Emotional & Social Support',
+    photo: img('anneke-bothma'),
+    bookable: 'an EQ or relationship coaching session with Anneke Bothma',
+    tagline: 'Warm, practical coaching that helps children, parents and couples build emotional intelligence and stronger relationships.',
+    bio: 'Anneke is an EQ Expert and Relationship Coach with ten years of experience. She holds honours and undergraduate degrees in Psychology and is registered as a life coach with COMENSA. Through Superego Kids, Anneke provides socio-emotional and school-readiness assessments, individual play therapy and coaching for children, teenagers and adults, couples coaching, parental guidance, and school-based EQ and life-skills programmes. Her holistic, child-centred approach creates a safe and supportive environment where people can understand their emotions and develop practical tools for real-life challenges.'
+  },
+  {
     slug: 'rachael-anne-johnston',
     name: 'Rachael Anne Johnston',
     role: 'Social Worker | Play-Based Intervention',
