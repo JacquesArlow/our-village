@@ -14,7 +14,7 @@ vi.mock('~~/server/db/client', () => ({
 
 import * as schema from '~~/server/db/schema'
 import { booking } from '~~/server/db/schema'
-import { getMonth, listEvents, createCalendarEvent, createBlock, createBooking } from '~~/server/utils/calendarRepo'
+import { getMonth, listEvents, createCalendarEvent, createBlock, createBooking, updateCalendarEvent, getPublicEvent } from '~~/server/utils/calendarRepo'
 
 beforeEach(async () => {
   const client = createClient({ url: 'file::memory:' })
@@ -24,6 +24,16 @@ beforeEach(async () => {
 })
 
 describe('calendarRepo', () => {
+  it('persists public details, preserves them on unrelated edits, and keeps private events inaccessible', async () => {
+    const created = await createCalendarEvent({ startDate: '2026-10-31', title: 'CPR class', isPublic: true, staff: 'Internal note', publicDetails: { startTime: '08:30', venue: 'Our Village' } })
+    await updateCalendarEvent(created.id!, { bookingCostLabel: 'R650 per person' })
+    const published = await getPublicEvent(created.id!)
+    expect(published?.publicDetails).toEqual({ startTime: '08:30', venue: 'Our Village' })
+    expect(published?.bookingCostLabel).toBe('R650 per person')
+    expect(published).not.toHaveProperty('staff')
+    await updateCalendarEvent(created.id!, { isPublic: false })
+    expect(await getPublicEvent(created.id!)).toBeNull()
+  })
   it('getMonth returns only public events when publicOnly', async () => {
     await createCalendarEvent({ startDate: '2026-06-05', title: 'Public day', isPublic: true })
     await createCalendarEvent({ startDate: '2026-06-06', title: 'Private day', isPublic: false })

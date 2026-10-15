@@ -3,6 +3,15 @@ export const COLOR_TOKENS: ColorToken[] = ['sage', 'pink', 'red', 'blue', 'defau
 
 export type BookingFormVariant = 'standard' | 'growth_screening'
 
+export interface EventDetails {
+  startTime?: string | null
+  endTime?: string | null
+  venue?: string | null
+  address?: string | null
+  presenter?: string | null
+  posterUrl?: string | null
+}
+
 export type FormDropdownSelectionMode = 'single' | 'multiple'
 
 export interface FormDropdownConfig {
@@ -52,6 +61,7 @@ export interface EventRow {
   formUploadedAt: number | null
   bookingFormVariant: BookingFormVariant | null
   bookingCostLabel: string | null
+  publicDetails?: EventDetails | null
   formDropdown: FormDropdownConfig | null
   color: ColorToken
   isHighlight: boolean

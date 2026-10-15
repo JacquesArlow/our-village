@@ -107,8 +107,7 @@ jobs:
           export CONTAINER_NAME="${{ steps.env.outputs.container }}"
           export HOST_PORT="${{ steps.env.outputs.port }}"
           docker compose -p "${{ steps.env.outputs.project }}" build --no-cache
-          docker compose -p "${{ steps.env.outputs.project }}" down
-          docker compose -p "${{ steps.env.outputs.project }}" up -d
+          docker compose -p "${{ steps.env.outputs.project }}" up -d --remove-orphans
 
       - name: Health check
         run: |

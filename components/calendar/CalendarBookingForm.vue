@@ -146,7 +146,7 @@ async function submit() {
         <p v-if="eventTitle" class="text-sm text-base-content/55">for <span class="font-semibold">{{ eventTitle }}</span></p>
       </div>
 
-      <div v-if="isGrowthScreening" class="rounded-field border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-base-content/70">
+      <div v-if="isGrowthScreening || bookingCostLabel" class="rounded-field border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-base-content/70">
         <span class="font-semibold text-secondary">Cost:</span> {{ costLabel }}
       </div>
 

@@ -4,6 +4,12 @@ import { event, monthBlock, booking, formSubmission } from '~~/server/db/schema'
 import type { EventInsert, MonthBlockInsert, EventSelect, BookingInsert, FormSubmissionInsert } from '~~/server/db/schema'
 import type { FormDropdownConfig } from '~~/shared/calendar'
 import { monthRange } from '~~/shared/calendar'
+import { normalizeEventDetails } from '~~/shared/eventPresentation'
+
+function publicDetails(input: unknown) {
+  try { return normalizeEventDetails(input) }
+  catch (error) { throw createError({ statusCode: 400, statusMessage: (error as Error).message }) }
+}
 
 const now = () => Date.now()
 const id = () => crypto.randomUUID()
@@ -126,6 +132,7 @@ export async function createCalendarEvent(input: Partial<EventInsert> & { startD
     formUploadedAt: input.formUploadedAt ?? null,
     bookingFormVariant: input.bookingFormVariant ?? null,
     bookingCostLabel: input.bookingCostLabel ?? null,
+    publicDetails: publicDetails(input.publicDetails),
     formDropdown: normalizeFormDropdown(input.formDropdown),
     color: input.color ?? 'default',
     isHighlight: input.isHighlight ?? false,
@@ -141,7 +148,7 @@ export async function updateCalendarEvent(eventId: string, patch: Partial<EventI
   const normalized = 'formDropdown' in patch
     ? { ...patch, formDropdown: normalizeFormDropdown(patch.formDropdown) }
     : patch
-  await db.update(event).set({ ...normalized, updatedAt: now() }).where(eq(event.id, eventId))
+  await db.update(event).set({ ...normalized, ...('publicDetails' in patch ? { publicDetails: publicDetails(patch.publicDetails) } : {}), updatedAt: now() }).where(eq(event.id, eventId))
 }
 
 export async function setEventFormFile(eventId: string, file: {

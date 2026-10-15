@@ -14,6 +14,7 @@ const f = reactive({
   endDate: (props.model?.endDate ?? null) as string | null,
   title: props.model?.title ?? '',
   detail: props.model?.detail ?? '',
+  publicDetails: { ...props.model?.publicDetails },
   staff: props.model?.staff ?? '',
   formFileName: props.model?.formFileName ?? null,
   formFileSize: props.model?.formFileSize ?? null,
@@ -75,9 +76,10 @@ async function save() {
       endDate: f.endDate || null,
       title: f.title,
       detail: f.detail || null,
+      publicDetails: f.publicDetails,
       staff: f.staff || null,
       bookingFormVariant: f.bookingFormVariant,
-      bookingCostLabel: f.bookingFormVariant === 'growth_screening' ? (f.bookingCostLabel || 'R375') : null,
+      bookingCostLabel: f.bookingCostLabel || (f.bookingFormVariant === 'growth_screening' ? 'R375' : null),
       formDropdown: cleanDropdown(),
       color: f.color,
       isHighlight: f.isHighlight,
@@ -201,6 +203,19 @@ const fmtBytes = (bytes: number | null) => bytes ? `${(bytes / 1024 / 1024).toFi
       <input v-model="f.staff" class="w-full rounded-field border border-base-300 bg-base-100 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="e.g. Megan" />
     </label>
 
+    <fieldset class="space-y-3 rounded-field border border-base-300 p-4">
+      <legend class="px-1 font-display text-sm font-bold text-secondary">Public event details</legend>
+      <p class="text-xs text-base-content/60">Optional details shown on event cards and the event page. Times are South African time.</p>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="min-w-0 text-sm">Start time<input v-model="f.publicDetails.startTime" type="time" class="mt-1 block w-full min-w-0 rounded-field border border-base-300 px-3 py-2" /></label>
+        <label class="min-w-0 text-sm">End time<input v-model="f.publicDetails.endTime" type="time" class="mt-1 block w-full min-w-0 rounded-field border border-base-300 px-3 py-2" /></label>
+      </div>
+      <label class="block text-sm">Venue<input v-model="f.publicDetails.venue" maxlength="250" class="mt-1 w-full rounded-field border border-base-300 px-3 py-2" placeholder="Our Village Training Space" /></label>
+      <label class="block text-sm">Address<input v-model="f.publicDetails.address" maxlength="250" class="mt-1 w-full rounded-field border border-base-300 px-3 py-2" placeholder="525 Alsation Drive, Garsfontein, Pretoria" /></label>
+      <label class="block text-sm">Presented by<input v-model="f.publicDetails.presenter" maxlength="250" class="mt-1 w-full rounded-field border border-base-300 px-3 py-2" /></label>
+      <label class="block text-sm">Poster image link<input v-model="f.publicDetails.posterUrl" maxlength="1000" class="mt-1 w-full rounded-field border border-base-300 px-3 py-2" placeholder="https://… or /events/poster.webp" /></label>
+    </fieldset>
+
     <div class="rounded-field border border-base-300 p-4">
       <div class="mb-3">
         <p class="font-display text-sm font-bold uppercase tracking-wide text-secondary">Registration form</p>
@@ -215,7 +230,7 @@ const fmtBytes = (bytes: number | null) => bytes ? `${(bytes / 1024 / 1024).toFi
             <option value="growth_screening">Growth screening - baby details</option>
           </select>
         </label>
-        <label v-if="f.bookingFormVariant === 'growth_screening'" class="block">
+        <label class="block">
           <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-base-content/55">Cost label</span>
           <input v-model="f.bookingCostLabel" class="w-full rounded-field border border-base-300 bg-base-100 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="R375" />
         </label>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { bookingLink } = useBooking()
+const route = useRoute()
 </script>
 
 <template>
@@ -12,6 +13,7 @@ const { bookingLink } = useBooking()
 
     <!-- floating WhatsApp -->
     <a
+      v-if="!route.path.startsWith('/calendar')"
       :href="bookingLink()"
       target="_blank"
       rel="noopener"
