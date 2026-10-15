@@ -19,7 +19,6 @@ if (import.meta.server && !event.value) {
 usePageSeo({
   title: computed(() => event.value ? event.value.title + ' | Our Village Event' : 'Event Not Found | Our Village'),
   description: eventDescription,
-  image: computed(() => event.value?.publicDetails?.posterUrl || '/services/baby-family-clinic.webp'),
   type: 'article',
   noindex: computed(() => !!error.value || !event.value)
 })

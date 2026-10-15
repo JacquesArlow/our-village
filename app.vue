@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { SITE_SHARE_IMAGE } from '~~/shared/branding'
 const site = useSite()
 const siteUrl = (useRuntimeConfig().public.siteUrl as string).replace(/\/$/, '')
 
@@ -15,7 +16,7 @@ useHead({
           name: site.name,
           url: siteUrl,
           logo: siteUrl + '/logo.png',
-          image: siteUrl + '/services/baby-family-clinic.webp',
+          image: siteUrl + SITE_SHARE_IMAGE.path,
           description: 'A multidisciplinary family wellness practice providing medical care, therapy, baby clinics and antenatal classes in Garsfontein, Pretoria.',
           telephone: site.phone,
           email: site.email,

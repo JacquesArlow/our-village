@@ -3,7 +3,6 @@ const site = useSite()
 usePageSeo({
   title: 'In-Person Antenatal Classes Pretoria | Our Village',
   description: 'Join practical, expert-led antenatal classes for couples in Pretoria and feel informed, confident and supported for birth and early parenthood.',
-  image: '/antenatal/hands-on.webp'
 })
 
 const reasons = [

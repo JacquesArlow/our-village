@@ -1,10 +1,10 @@
 import type { MaybeRefOrGetter } from 'vue'
+import { SITE_SHARE_IMAGE } from '~~/shared/branding'
 
 interface PageSeoOptions {
   title: MaybeRefOrGetter<string>
   description: MaybeRefOrGetter<string>
   path?: MaybeRefOrGetter<string>
-  image?: MaybeRefOrGetter<string>
   type?: 'website' | 'article' | 'profile'
   noindex?: MaybeRefOrGetter<boolean>
   schema?: MaybeRefOrGetter<Record<string, unknown> | undefined>
@@ -16,7 +16,7 @@ export const usePageSeo = (options: PageSeoOptions) => {
   const siteUrl = (config.public.siteUrl as string).replace(/\/$/, '')
   const canonicalUrl = computed(() => new URL(toValue(options.path) || route.path, siteUrl + '/').toString())
   const imageUrl = computed(() =>
-    new URL(toValue(options.image) || '/services/baby-family-clinic.webp', siteUrl + '/').toString()
+    new URL(SITE_SHARE_IMAGE.path, siteUrl + '/').toString()
   )
   const robots = computed(() =>
     toValue(options.noindex)
@@ -33,13 +33,18 @@ export const usePageSeo = (options: PageSeoOptions) => {
     ogType: options.type || 'website',
     ogUrl: canonicalUrl,
     ogImage: imageUrl,
-    ogImageAlt: () => toValue(options.title) + ' — Our Village',
+    ogImageSecureUrl: imageUrl,
+    ogImageAlt: SITE_SHARE_IMAGE.alt,
+    ogImageWidth: SITE_SHARE_IMAGE.width,
+    ogImageHeight: SITE_SHARE_IMAGE.height,
+    ogImageType: SITE_SHARE_IMAGE.type,
     ogSiteName: 'Our Village',
     ogLocale: 'en_ZA',
     twitterCard: 'summary_large_image',
     twitterTitle: () => toValue(options.title),
     twitterDescription: () => toValue(options.description),
-    twitterImage: imageUrl
+    twitterImage: imageUrl,
+    twitterImageAlt: SITE_SHARE_IMAGE.alt
   })
 
   useHead(() => ({

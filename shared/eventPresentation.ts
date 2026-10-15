@@ -1,4 +1,5 @@
 import type { EventDetails, EventRow } from './calendar'
+import { SITE_SHARE_VERSION } from './branding'
 
 export type PublicCalendarEvent = Pick<EventRow, 'id' | 'title' | 'startDate' | 'endDate' | 'detail' | 'bookingCostLabel' | 'publicDetails'> & { color?: string }
 
@@ -46,7 +47,7 @@ export function eventDirections(details?: EventDetails | null) {
 }
 
 export function eventShareLink(event: PublicCalendarEvent, siteUrl: string) {
-  const text = [event.title, eventDateLabel(event), eventTimeLabel(event.publicDetails), siteUrl.replace(/\/$/, '') + '/calendar/event/' + event.id].filter(Boolean).join('\n')
+  const text = [event.title, eventDateLabel(event), eventTimeLabel(event.publicDetails), siteUrl.replace(/\/$/, '') + '/calendar/event/' + event.id + '?share=' + SITE_SHARE_VERSION].filter(Boolean).join('\n')
   return 'https://wa.me/?text=' + encodeURIComponent(text)
 }
 

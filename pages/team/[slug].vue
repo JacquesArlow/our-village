@@ -27,7 +27,6 @@ const personSchema = computed(() => ({
 usePageSeo({
   title: seoTitle,
   description: seoDescription,
-  image: computed(() => member.value!.photo || '/logo.png'),
   type: 'profile',
   schema: personSchema
 })
