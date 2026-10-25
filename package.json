@@ -20,7 +20,7 @@
     "drizzle-kit": "^0.31.10",
     "nuxt": "^4.5.2",
     "tsx": "^4.23.13",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",
