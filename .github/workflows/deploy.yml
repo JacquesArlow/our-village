@@ -4,12 +4,14 @@ name: Deploy
 on:
   push:
     branches: [staging, main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
     runs-on: [self-hosted, our-village]
     steps:
       - name: Checkout repository
