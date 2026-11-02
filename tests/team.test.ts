@@ -14,7 +14,8 @@ describe('team profiles', () => {
   it.each([
     ['lizelle-van-dyk', 'Lizelle van Dyk', 'Child Development & Learning', 'Master’s degree in Early Childhood Intervention'],
     ['sorien-vermeulen', 'Sorien Vermeulen', 'Support Team', 'Human Resource Management'],
-    ['carli-breedt', 'Carli Breedt', 'Support Team', 'over 12 years of experience']
+    ['carli-breedt', 'Carli Breedt', 'Support Team', 'over 12 years of experience'],
+    ['prof-anke-de-beer', 'Prof Anke de Beer', 'Emotional & Social Support', 'Master of Theology in Christian Counselling']
   ])('publishes %s with the supplied portrait and a matching card and biography', (slug, name, category, qualification) => {
     const member = teamBySlug(slug)!
     expect(member).toBeDefined()
@@ -38,5 +39,16 @@ describe('team profiles', () => {
     expect(teamBySlug('sorien-vermeulen')!.bio).toContain('mother of two')
     expect(teamBySlug('carli-breedt')!.role).toBe('Marketing Manager')
     expect(teamBySlug('carli-breedt')!.bio).toContain('Grounded in faith')
+  })
+
+  it('summarises Prof Anke’s questionnaire without implying clinical psychology credentials', () => {
+    const member = teamBySlug('prof-anke-de-beer')!
+    expect(member.role).toBe('Digital Wellness Counsellor')
+    expect(member.bio).toContain('interdisciplinary research focused on internet addiction')
+    expect(member.bio).toContain('trauma counsellor and play therapist')
+    expect(member.bio).toContain('Christian faith')
+    expect(member.bio).toContain('ReBOOT: TechBalance and Wellness Institute')
+    expect(member.bio).toContain('Smart Device Licence')
+    expect(member.bio).not.toMatch(/clinical psychologist|registered psychologist/i)
   })
 })

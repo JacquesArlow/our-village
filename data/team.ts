@@ -261,6 +261,15 @@ export const team: TeamMember[] = [
     tagline: 'Art, play and mindfulness to support trauma healing and wellbeing.',
     bio: 'Nicole integrates art, play and mindfulness to support trauma healing and emotional wellbeing — creating a gentle, creative space where children and adults can process and grow.'
   },
+  {
+    slug: 'prof-anke-de-beer',
+    name: 'Prof Anke de Beer',
+    role: 'Digital Wellness Counsellor',
+    category: 'Emotional & Social Support',
+    photo: '/team/prof-anke-de-beer.jpg',
+    tagline: 'Helping children and families build healthy digital habits and rediscover balance, connection and life beyond screens.',
+    bio: 'Prof Anke de Beer supports children, parents and families in building healthier relationships with technology. She holds a Master of Theology in Christian Counselling and doctorates in Theology and Interdisciplinary Studies, with interdisciplinary research focused on internet addiction. A qualified trauma counsellor and play therapist, Anke combines a compassionate, evidence-informed approach with a foundation in her Christian faith. Through her work with ReBOOT: TechBalance and Wellness Institute and the Smart Device Licence initiative, she helps families and educators establish healthy digital boundaries, strengthen relationships and restore balance. Her focus is not simply less screen time, but more connection, play, purpose and opportunities for children to flourish.'
+  },
 
   // ────────────────────────────── Support Team ──────────────────────────────
   {
