@@ -1,0 +1,37 @@
+services:
+  web:
+    build: .
+    image: ${IMAGE_NAME:-ourvillage-booking-staging}:latest
+    container_name: ${CONTAINER_NAME:-ourvillage-web-staging}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${HOST_PORT:-8093}:3000"
+    env_file:
+      - ../.env
+    environment:
+      APP_MODE: staging
+      NODE_ENV: production
+      BOOKING_DATABASE_PATH: /data/bookings.db
+      BETTER_AUTH_URL: https://staging.our-village.co.za
+      EMAIL_MODE: "off"
+    volumes:
+      - booking_data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 768m
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+volumes:
+  booking_data:

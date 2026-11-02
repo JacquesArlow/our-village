@@ -47,10 +47,10 @@ jobs:
             echo "auth_url=https://www.our-village.co.za" >> "$GITHUB_OUTPUT"
           else
             echo "name=staging"                           >> "$GITHUB_OUTPUT"
-            echo "dir=/opt/ourvillage-web-staging"        >> "$GITHUB_OUTPUT"
+            echo "dir=/opt/ourvillage-booking-staging"    >> "$GITHUB_OUTPUT"
             echo "project=ourvillage-web-staging"         >> "$GITHUB_OUTPUT"
             echo "container=ourvillage-web-staging"       >> "$GITHUB_OUTPUT"
-            echo "image=ourvillage-web-staging"           >> "$GITHUB_OUTPUT"
+            echo "image=ourvillage-booking-staging"       >> "$GITHUB_OUTPUT"
             echo "port=8093"                              >> "$GITHUB_OUTPUT"
             echo "auth_url=https://staging.our-village.co.za" >> "$GITHUB_OUTPUT"
           fi
@@ -68,6 +68,7 @@ jobs:
             "$GITHUB_WORKSPACE/" "${{ steps.env.outputs.dir }}/"
 
       - name: Write deploy .env from GitHub Secrets
+        if: github.ref_name == 'main'
         env:
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
           ADMIN_SEED_EMAIL: ${{ secrets.ADMIN_SEED_EMAIL }}
@@ -108,13 +109,27 @@ jobs:
           export IMAGE_NAME="${{ steps.env.outputs.image }}"
           export CONTAINER_NAME="${{ steps.env.outputs.container }}"
           export HOST_PORT="${{ steps.env.outputs.port }}"
-          docker compose -p "${{ steps.env.outputs.project }}" build --no-cache
-          docker compose -p "${{ steps.env.outputs.project }}" up -d --remove-orphans
+          compose_file=docker-compose.yml
+          if [ "${{ github.ref_name }}" = "staging" ]; then
+            compose_file=booking-app/compose.yml
+            test -s .env
+            grep -q '^APP_MODE=staging$' .env
+          fi
+          docker compose -f "$compose_file" -p "${{ steps.env.outputs.project }}" build --pull --no-cache
+          docker compose -f "$compose_file" -p "${{ steps.env.outputs.project }}" up -d --remove-orphans
 
       - name: Health check
         run: |
           # First boot runs DB migrations + auth init, so retry for up to ~30s.
           for i in $(seq 1 15); do
+            if [ "${{ github.ref_name }}" = "staging" ]; then
+              if curl -sf "http://127.0.0.1:${{ steps.env.outputs.port }}/api/health" | node -e 'let data=""; process.stdin.on("data",chunk=>data+=chunk); process.stdin.on("end",()=>{try{process.exit(JSON.parse(data).app==="our-village-bookings"?0:1)}catch(e){process.exit(1)}})'; then
+                echo "Booking staging health check passed."
+                exit 0
+              fi
+              sleep 2
+              continue
+            fi
             if curl -sf -o /dev/null "http://127.0.0.1:${{ steps.env.outputs.port }}"; then
               echo "✅ ${{ steps.env.outputs.name }} container is up on port ${{ steps.env.outputs.port }}"
               exit 0
@@ -122,5 +137,5 @@ jobs:
             sleep 2
           done
           echo "❌ ${{ steps.env.outputs.name }} health check failed on port ${{ steps.env.outputs.port }}"
-          docker compose -p "${{ steps.env.outputs.project }}" logs --tail=80 || true
+          docker logs --tail=80 "${{ steps.env.outputs.container }}" || true
           exit 1
