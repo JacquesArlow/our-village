@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import { serviceCategories } from '~/data/services'
-import { team } from '~/data/team'
+import { featuredTeamGroups } from '~/data/team'
 
 const site = useSite()
-const featured = team.filter((m) =>
-  ['andrea-swart', 'suzanne-de-beer', 'dr-natasha-bartie', 'cassandra-ruysch', 'melissa-raft', 'danielle-skinner', 'dr-celiane-van-der-westhuizen', 'alicia-coertze'].includes(m.slug)
-)
 
 const values = [
   { title: 'All under one roof', text: 'A full circle of medical and therapy care, working together for your family.' },
@@ -140,8 +137,10 @@ usePageSeo({
     <section class="section-y">
       <div class="container-px">
         <SectionHeading eyebrow="Meet the Team" title="Find the perfect professional to help you" />
-        <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <TeamCard v-for="m in featured" :key="m.slug" :member="m" />
+        <div class="mt-12 space-y-6">
+          <div v-for="group in featuredTeamGroups" :key="group.cat" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4" role="group" :aria-label="group.cat">
+            <TeamCard v-for="m in group.members" :key="m.slug" :member="m" />
+          </div>
         </div>
         <div class="mt-10 text-center">
           <NuxtLink to="/our-team" class="btn btn-outline btn-primary rounded-full font-semibold normal-case">See the whole team</NuxtLink>

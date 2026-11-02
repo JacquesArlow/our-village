@@ -1,4 +1,5 @@
 export type TeamCategory =
+  | 'Management'
   | 'Medical & Family Care'
   | 'Child Development & Learning'
   | 'Movement & Physical Wellness'
@@ -20,6 +21,7 @@ export interface TeamMember {
 }
 
 export const teamCategories: TeamCategory[] = [
+  'Management',
   'Medical & Family Care',
   'Child Development & Learning',
   'Movement & Physical Wellness',
@@ -31,7 +33,7 @@ export const teamCategories: TeamCategory[] = [
 const img = (slug: string) => `/team/${slug}.webp`
 
 export const team: TeamMember[] = [
-  // ───────────────────────── Medical & Family Care ─────────────────────────
+  // Co-Owners
   {
     slug: 'andrea-swart',
     name: 'Andrea Swart',
@@ -54,6 +56,36 @@ export const team: TeamMember[] = [
     tagline: 'Founder of LumiFloat, offering nurturing hydrotherapy for infant wellness.',
     bio: 'Suzanne is the founder of LumiFloat and co-owner of Our Village. She offers gentle, nurturing baby hydrotherapy and infant massage that supports development, relaxation and bonding — helping little ones (and their parents) thrive.'
   },
+  // Management
+  {
+    slug: 'lizelle-van-dyk',
+    name: 'Lizelle van Dyk',
+    role: 'Practise Manager',
+    category: 'Management',
+    photo: '/team/lizelle-van-dyk.jpg',
+    tagline: 'Connecting people and teams through almost 30 years of healthcare and early childhood intervention experience.',
+    bio: 'Lizelle is Our Village’s Practise Manager and an Occupational Therapist with a Master’s degree in Early Childhood Intervention and almost 30 years of experience in healthcare. Having worked with multidisciplinary teams in South Africa and the United Kingdom, she brings a wealth of experience in collaboration, case coordination and effective service delivery. A natural connector and problem-solver, Lizelle is passionate about building meaningful relationships, strengthening processes and creating environments where people and teams can thrive. With a heart for people and a commitment to excellence, she believes that working together creates opportunities for lasting, positive change.'
+  },
+  {
+    slug: 'sorien-vermeulen',
+    name: 'Sorien Vermeulen',
+    role: 'Project Manager',
+    category: 'Management',
+    photo: '/team/sorien-vermeulen.jpg',
+    tagline: 'A heart for people and purpose, connecting and equipping others to make a meaningful difference.',
+    bio: 'Sorien is Our Village’s Project Manager, bringing a B.Com degree in Human Resource Management and a qualification in Project Management, together with a heart for people and purpose. A daughter of the King, devoted wife and mother of two, her faith shapes the way she connects with and encourages others. A natural builder and organiser, she is passionate about creating meaningful connections and equipping people with the knowledge and tools they need to thrive. Driven by a deep love for South Africa, Sorien’s mission is to see a nation informed, empowered and inspired to make a difference.'
+  },
+  {
+    slug: 'carli-breedt',
+    name: 'Carli Breedt',
+    role: 'Marketing Manager',
+    category: 'Management',
+    photo: '/team/carli-breedt.jpg',
+    tagline: 'Bringing Our Village’s vision to life through purposeful storytelling, meaningful connections and genuine care.',
+    bio: 'Carli is Our Village’s Marketing Manager, bringing over 12 years of experience in marketing, sales and strategic communication. A marketing and communications specialist, full-time photographer, business owner and coach, she combines creativity and business insight with a genuine passion for people. Grounded in faith, Carli believes in leading with integrity, serving with love and allowing God to guide her personal and professional journey. She is passionate about using her God-given gifts to uplift others, help brands grow with purpose and bring Our Village’s vision to life — connecting families with valuable resources and ensuring that faith, community and genuine care shine through in every message.'
+  },
+
+  // Medical & Family Care
   {
     slug: 'dr-natasha-bartie',
     name: 'Dr. Natasha Bartie',
@@ -106,15 +138,6 @@ export const team: TeamMember[] = [
   },
 
   // ──────────────────── Child Development & Learning ────────────────────
-  {
-    slug: 'lizelle-van-dyk',
-    name: 'Lizelle van Dyk',
-    role: 'Occupational Therapist | Early Childhood Intervention',
-    category: 'Child Development & Learning',
-    photo: '/team/lizelle-van-dyk.jpg',
-    tagline: 'Connecting people and teams through almost 30 years of healthcare and early childhood intervention experience.',
-    bio: 'Lizelle is an Occupational Therapist with a Master’s degree in Early Childhood Intervention and almost 30 years of experience in healthcare. Having worked with multidisciplinary teams in South Africa and the United Kingdom, she brings a wealth of experience in collaboration, case coordination and effective service delivery. A natural connector and problem-solver, Lizelle is passionate about building meaningful relationships, strengthening processes and creating environments where people and teams can thrive. With a heart for people and a commitment to excellence, she believes that working together creates opportunities for lasting, positive change.'
-  },
   {
     slug: 'dr-celiane-van-der-westhuizen',
     name: 'Dr. Celiané van der Westhuizen',
@@ -273,24 +296,6 @@ export const team: TeamMember[] = [
 
   // ────────────────────────────── Support Team ──────────────────────────────
   {
-    slug: 'carli-breedt',
-    name: 'Carli Breedt',
-    role: 'Marketing Manager',
-    category: 'Support Team',
-    photo: '/team/carli-breedt.jpg',
-    tagline: 'Bringing Our Village’s vision to life through purposeful storytelling, meaningful connections and genuine care.',
-    bio: 'Carli is Our Village’s Marketing Manager, bringing over 12 years of experience in marketing, sales and strategic communication. A marketing and communications specialist, full-time photographer, business owner and coach, she combines creativity and business insight with a genuine passion for people. Grounded in faith, Carli believes in leading with integrity, serving with love and allowing God to guide her personal and professional journey. She is passionate about using her God-given gifts to uplift others, help brands grow with purpose and bring Our Village’s vision to life — connecting families with valuable resources and ensuring that faith, community and genuine care shine through in every message.'
-  },
-  {
-    slug: 'sorien-vermeulen',
-    name: 'Sorien Vermeulen',
-    role: 'Human Resources & Project Management',
-    category: 'Support Team',
-    photo: '/team/sorien-vermeulen.jpg',
-    tagline: 'A heart for people and purpose, connecting and equipping others to make a meaningful difference.',
-    bio: 'Sorien brings a B.Com degree in Human Resource Management and a qualification in Project Management, together with a heart for people and purpose. A daughter of the King, devoted wife and mother of two, her faith shapes the way she connects with and encourages others. A natural builder and organiser, she is passionate about creating meaningful connections and equipping people with the knowledge and tools they need to thrive. Driven by a deep love for South Africa, Sorien’s mission is to see a nation informed, empowered and inspired to make a difference.'
-  },
-  {
     slug: 'didi-moima',
     name: 'Didi Moima',
     role: 'Receptionist',
@@ -311,3 +316,22 @@ export const team: TeamMember[] = [
 ]
 
 export const teamBySlug = (slug: string) => team.find((m) => m.slug === slug)
+
+/** Preserve medical-category filters while showing the owners before management. */
+export function getTeamGroups(category: TeamCategory | 'All' = 'All') {
+  if (category !== 'All') return [{ cat: category, members: team.filter(member => member.category === category) }]
+  return [
+    { cat: 'Co-Owners', members: team.filter(member => member.owner) },
+    ...teamCategories.map(cat => ({ cat, members: team.filter(member => member.category === cat && !member.owner) }))
+  ].filter(group => group.members.length)
+}
+
+const featuredSlugs = ['andrea-swart', 'suzanne-de-beer', 'dr-natasha-bartie', 'cassandra-ruysch', 'melissa-raft', 'danielle-skinner', 'dr-celiane-van-der-westhuizen', 'alicia-coertze']
+const featured = team.filter(member => member.category === 'Management' || featuredSlugs.includes(member.slug))
+
+/** Separate rows keep managers below the owners and before the practitioners. */
+export const featuredTeamGroups = [
+  { cat: 'Co-Owners', members: featured.filter(member => member.owner) },
+  { cat: 'Management', members: featured.filter(member => member.category === 'Management') },
+  { cat: 'Practitioners', members: featured.filter(member => !member.owner && member.category !== 'Management') }
+].filter(group => group.members.length)

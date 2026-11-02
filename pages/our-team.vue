@@ -1,20 +1,14 @@
 <script setup lang="ts">
-import { team, teamCategories } from '~/data/team'
+import { getTeamGroups, teamCategories, type TeamCategory } from '~/data/team'
 
 usePageSeo({
   title: 'Health & Therapy Professionals | Our Village Pretoria',
   description: 'Meet Our Village’s multidisciplinary team of doctors, nurses, therapists, psychologists and family wellness professionals in Pretoria.'
 })
 
-const active = ref<string>('All')
-const filters = ['All', ...teamCategories]
-const visible = computed(() => (active.value === 'All' ? team : team.filter((m) => m.category === active.value)))
-
-const grouped = computed(() =>
-  teamCategories
-    .map((cat) => ({ cat, members: visible.value.filter((m) => m.category === cat) }))
-    .filter((g) => g.members.length)
-)
+const active = ref<TeamCategory | 'All'>('All')
+const filters: (TeamCategory | 'All')[] = ['All', ...teamCategories]
+const grouped = computed(() => getTeamGroups(active.value))
 </script>
 
 <template>
