@@ -75,6 +75,7 @@ async function saveType() {
     });
     clearType();
     await refresh();
+    await refreshNuxtData("public-doctors");
     saved.value = "Appointment type saved.";
   } catch (e) {
     error.value = message(e);
@@ -92,9 +93,10 @@ async function save(publish = false, next = false) {
       body: {
         ...model,
         doctorId: source.id,
-        onboarded: publish || (!next && !!data.value.doctor.onboarded),
+        onboarded: publish || !!data.value.doctor.onboarded,
       },
     });
+    await refreshNuxtData("public-doctors");
     saved.value = "Calendar settings saved.";
     if (publish)
       await navigateTo(
@@ -172,7 +174,7 @@ function continueServices() {
           maxlength="250" /></label
       ><label class="check"
         ><input v-model="model.active" type="checkbox" /><span
-          >Show this doctor in the public directory</span
+          >Show this doctor in the booking directory after publishing</span
         ></label
       ><button class="button" :disabled="busy" @click="save(false, true)">
         Save draft &amp; continue

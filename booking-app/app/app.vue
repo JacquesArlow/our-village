@@ -1,7 +1,9 @@
 <script setup lang="ts">
 const { account, refresh } = useAccount();
 const { data: config } = await useFetch<any>("/api/public/config");
-const route = useRoute();
+const { data: doctors } = await useFetch<any[]>("/api/public/doctors", {
+  key: "public-doctors",
+});
 onMounted(() => {
   if (!account.value) refresh();
 });
@@ -24,7 +26,7 @@ async function logout() {
         ></NuxtLink
       >
       <nav aria-label="Main navigation">
-        <NuxtLink to="/">Find a doctor</NuxtLink>
+        <NuxtLink v-if="doctors?.length" to="/#doctors">Find a doctor</NuxtLink>
         <NuxtLink v-if="account?.user.role === 'patient'" to="/account"
           >My appointments</NuxtLink
         >

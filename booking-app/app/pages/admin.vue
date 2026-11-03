@@ -35,6 +35,18 @@ const availableTypes = computed(() =>
     (s: any) => s.doctor_id === booking.doctorId && s.active,
   ),
 );
+const configuredDoctors = computed(() =>
+  (data.value?.doctors || []).filter((doctor: any) => doctor.onboarded),
+);
+const bookableDoctors = computed(() =>
+  configuredDoctors.value.filter(
+    (doctor: any) =>
+      doctor.active &&
+      data.value.services.some(
+        (service: any) => service.doctor_id === doctor.id && service.active,
+      ),
+  ),
+);
 watch(
   () => booking.doctorId,
   () => {
@@ -201,6 +213,7 @@ async function reset() {
           </div>
           <div class="actions">
             <NuxtLink
+              v-if="doctor.onboarded"
               :to="'/doctor?doctorId=' + doctor.id"
               class="button small secondary"
               >View calendar</NuxtLink
@@ -307,8 +320,11 @@ async function reset() {
         </div>
       </form>
     </div>
-    <div v-if="tab === 'Bookings'" class="dashboard-grid">
-      <form class="panel form-panel" @submit.prevent="makeBooking">
+    <div v-if="tab === 'Bookings' && !configuredDoctors.length" class="empty">
+      Doctor calendars will appear here after onboarding is complete.
+    </div>
+    <div v-else-if="tab === 'Bookings'" class="dashboard-grid">
+      <form v-if="bookableDoctors.length" class="panel form-panel" @submit.prevent="makeBooking">
         <h2>Book on behalf of a patient</h2>
         <p class="hint">
           The patient must first register and save their contact profile. A slot
@@ -329,7 +345,7 @@ async function reset() {
           >Doctor<select v-model="booking.doctorId" required>
             <option value="">Choose doctor</option>
             <option
-              v-for="doctor in data?.doctors"
+              v-for="doctor in bookableDoctors"
               :key="doctor.id"
               :value="doctor.id"
             >
@@ -370,7 +386,7 @@ async function reset() {
           View each doctor’s bookings, reschedule visits and manage time off.
         </p>
         <NuxtLink
-          v-for="doctor in data?.doctors"
+          v-for="doctor in configuredDoctors"
           :key="doctor.id"
           :to="'/doctor?doctorId=' + doctor.id"
           class="list-row"

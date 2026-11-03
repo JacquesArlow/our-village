@@ -9,6 +9,7 @@ import {
   one,
   run,
   slots,
+  publishedDoctors,
   createAppointment,
   changeAppointment,
   doctorFor,
@@ -159,6 +160,26 @@ describe("doctor setup and scheduling", () => {
   it("does not expose slots until the doctor has published the calendar", () => {
     run(db, "UPDATE doctor SET onboarded=0 WHERE id=?", "natasha");
     expect(slots(db, "natasha-service", "2026-11-03", now)).toEqual([]);
+  });
+  it("opens the directory for each doctor only after they publish a bookable calendar", () => {
+    run(db, "UPDATE doctor SET onboarded=0");
+    expect(publishedDoctors(db)).toEqual([]);
+
+    saveDoctor(db, doc, "natasha", {
+      name: "Doctor",
+      title: "GP",
+      location: "Our Village",
+      weeklyHours: [{ day: 2, start: "09:00", end: "12:00" }],
+      minNoticeHours: 0,
+      horizonDays: 60,
+      cancellationHours: 24,
+      onboarded: true,
+      active: true,
+    });
+    expect(publishedDoctors(db).map(({ id }) => id)).toEqual(["natasha"]);
+
+    run(db, "UPDATE service SET active=0 WHERE doctor_id=?", "natasha");
+    expect(publishedDoctors(db)).toEqual([]);
   });
   it("requires an active service and working hours before publishing", () => {
     expect(() =>

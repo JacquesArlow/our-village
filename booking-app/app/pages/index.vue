@@ -1,27 +1,35 @@
 <script setup lang="ts">
-const { data: doctors, error } = await useFetch<any[]>("/api/public/doctors");
+const { data: doctors, error } = await useFetch<any[]>("/api/public/doctors", {
+  key: "public-doctors",
+});
 </script>
 <template>
   <section class="hero">
     <div class="wrap">
       <p class="eyebrow">Your health. Your village.</p>
       <h1>Care that fits<br />your day.</h1>
-      <p class="lede">
+      <p v-if="doctors?.length" class="lede">
         Find your doctor, choose a time and manage your appointments in one
         calm, connected space.
       </p>
-      <div class="hero-actions">
+      <div v-if="doctors?.length" class="hero-actions">
         <a href="#doctors" class="button">Explore doctors</a
         ><NuxtLink to="/sign-up" class="button secondary"
           >Create a patient account</NuxtLink
         >
       </div>
+      <p v-else-if="error" class="notice error" role="alert">
+        We couldn’t load online appointments. Please refresh and try again.
+      </p>
+      <p v-else class="lede">
+        Online appointments will open once a doctor publishes their calendar.
+      </p>
       <p class="muted">
         A private preview of Our Village’s new booking experience.
       </p>
     </div>
   </section>
-  <section id="doctors" class="wrap section">
+  <section v-if="doctors?.length" id="doctors" class="wrap section">
     <div class="section-heading">
       <div>
         <p class="eyebrow">Meet your care team</p>
@@ -29,9 +37,6 @@ const { data: doctors, error } = await useFetch<any[]>("/api/public/doctors");
       </div>
       <p>Online bookings open once each doctor has completed their setup.</p>
     </div>
-    <p v-if="error" class="notice error">
-      We couldn’t load the doctors. Please refresh and try again.
-    </p>
     <div class="cards">
       <article v-for="doctor in doctors" :key="doctor.id" class="doctor-card">
         <img
@@ -51,9 +56,7 @@ const { data: doctors, error } = await useFetch<any[]>("/api/public/doctors");
           }}
         </div>
         <div class="card-body">
-          <span class="badge" :class="doctor.onboarded ? 'success' : ''">{{
-            doctor.onboarded ? "Bookings open" : "Setup in progress"
-          }}</span>
+          <span class="badge success">Bookings open</span>
           <h3>{{ doctor.name }}</h3>
           <p class="role">{{ doctor.title || "Doctor at Our Village" }}</p>
           <p>
@@ -69,11 +72,8 @@ const { data: doctors, error } = await useFetch<any[]>("/api/public/doctors");
         </div>
       </article>
     </div>
-    <div v-if="!doctors?.length && !error" class="empty">
-      Our care team is being set up. Please check back soon.
-    </div>
   </section>
-  <section class="soft-section">
+  <section v-if="doctors?.length" class="soft-section">
     <div class="wrap three-cols">
       <div>
         <span class="step-number">01</span>

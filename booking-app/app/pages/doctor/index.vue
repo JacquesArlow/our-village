@@ -21,6 +21,9 @@ const setupLink = computed(
     "/doctor/get-started" +
     (account.value.user.role === "admin" ? "?doctorId=" + doctorId : ""),
 );
+if (data.value && !data.value.doctor.onboarded) {
+  await navigateTo(setupLink.value, { replace: true });
+}
 const week = computed(() =>
   Array.from({ length: 7 }, (_, i) => {
     const date = new Date(
@@ -82,7 +85,7 @@ async function removeBlock(id: string) {
 </script>
 <template>
   <section class="wrap section">
-    <template v-if="data"
+    <template v-if="data?.doctor.onboarded"
       ><div class="section-heading">
         <div>
           <p class="eyebrow">Doctor workspace</p>

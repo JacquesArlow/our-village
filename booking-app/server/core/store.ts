@@ -68,6 +68,22 @@ export function expireHolds(db: DatabaseSync, now = Date.now()) {
     now,
   );
 }
+export function publishedDoctors(db: DatabaseSync) {
+  return many(
+    db,
+    `SELECT d.id,d.name,d.title,d.description,d.location
+     FROM doctor d WHERE d.active=1 AND d.onboarded=1
+     AND EXISTS (SELECT 1 FROM service s WHERE s.doctor_id=d.id AND s.active=1)
+     ORDER BY d.created_at`,
+  ).map((doctor) => ({
+    ...doctor,
+    services: many(
+      db,
+      "SELECT id,name,duration_minutes,buffer_minutes,amount_cents FROM service WHERE doctor_id=? AND active=1 ORDER BY name",
+      doctor.id,
+    ),
+  }));
+}
 export function slots(
   db: DatabaseSync,
   serviceId: string,

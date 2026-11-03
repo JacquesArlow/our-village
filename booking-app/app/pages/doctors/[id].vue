@@ -2,10 +2,13 @@
 const route = useRoute(),
   { account, refresh } = useAccount(),
   { money, clock, today, message } = useBookingUi();
-const { data: doctors } = await useFetch<any[]>("/api/public/doctors");
+const { data: doctors, error: directoryError } = await useFetch<any[]>(
+  "/api/public/doctors",
+);
 const doctor = computed(() =>
   doctors.value?.find((d) => d.id === route.params.id),
 );
+if (directoryError.value) throw directoryError.value;
 if (!doctor.value)
   throw createError({ statusCode: 404, statusMessage: "Doctor not found" });
 const serviceId = ref(doctor.value.services[0]?.id || ""),
@@ -70,8 +73,8 @@ async function book(slot: any) {
 }
 </script>
 <template>
-  <section class="wrap section">
-    <NuxtLink to="/" class="back-link">← All doctors</NuxtLink>
+  <section v-if="doctor" class="wrap section">
+    <NuxtLink to="/#doctors" class="back-link">← All doctors</NuxtLink>
     <div class="section-heading">
       <div>
         <p class="eyebrow">Your doctor’s calendar</p>
@@ -95,7 +98,7 @@ async function book(slot: any) {
         </p>
       </aside>
       <div class="panel">
-        <template v-if="doctor.onboarded && doctor.services.length"
+        <template v-if="doctor.services.length"
           ><h2>Choose your appointment</h2>
           <label
             >Appointment type<select v-model="serviceId">
@@ -138,13 +141,6 @@ async function book(slot: any) {
             administrator simulation.
           </p></template
         >
-        <div v-else class="empty">
-          <h2>Calendar setup in progress</h2>
-          <p>
-            {{ doctor.name }} is configuring appointment types, prices and
-            working hours. No times are bookable yet.
-          </p>
-        </div>
       </div>
     </div>
   </section>
