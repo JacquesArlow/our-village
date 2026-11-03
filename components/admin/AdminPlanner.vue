@@ -6,6 +6,11 @@ defineEmits<{ signout: [] }>()
 const now = new Date()
 const year = ref(now.getFullYear()); const month = ref(now.getMonth() + 1)
 const { data, refresh } = await useFetch<{ events: EventRow[]; blocks: BlockRow[] }>('/api/admin/month', { query: { year, month } })
+const appointmentPreviewUrl = ref<string | null>(null)
+onMounted(async () => {
+  const preview = await $fetch('/api/admin/appointment-preview').catch(() => null)
+  appointmentPreviewUrl.value = preview?.url ?? null
+})
 function prev() { if (month.value === 1) { month.value = 12; year.value-- } else month.value-- }
 function next() { if (month.value === 12) { month.value = 1; year.value++ } else month.value++ }
 const grouped = computed(() => blocksBySection(data.value?.blocks ?? []))
@@ -21,7 +26,12 @@ function openDay(date: string) { navigateTo(`/village-desk/day/${date}`) }
           <img src="/logo.png" alt="Our Village" class="h-8 w-auto" />
           <span class="hidden text-sm font-semibold uppercase tracking-[0.2em] text-base-content/40 sm:inline">Village Desk</span>
         </div>
-        <button class="btn btn-ghost btn-sm" @click="$emit('signout')">Sign out</button>
+        <div class="flex items-center gap-2">
+          <NuxtLink v-if="appointmentPreviewUrl" :to="appointmentPreviewUrl" external class="btn btn-outline btn-sm">
+            Appointment preview
+          </NuxtLink>
+          <button class="btn btn-ghost btn-sm" @click="$emit('signout')">Sign out</button>
+        </div>
       </div>
     </header>
 

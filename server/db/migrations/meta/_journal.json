@@ -64,6 +64,13 @@
       "when": 1792062689587,
       "tag": "0008_boring_domino",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1793729587057,
+      "tag": "0009_better_auth_account_issuer",
+      "breakpoints": true
     }
   ]
 }

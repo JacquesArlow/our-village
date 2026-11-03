@@ -7,6 +7,8 @@ import * as schema from '~~/server/db/schema'
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: 'sqlite', schema }),
   emailAndPassword: { enabled: true },
+  // Village Desk accounts are provisioned server-side by the admin seed.
+  disabledPaths: ['/sign-up/email'],
   plugins: [
     // Cloudflare Turnstile on the admin login. Only /sign-in/email is gated so the
     // server-side admin seed (sign-up) is unaffected. Client sends the token as the
