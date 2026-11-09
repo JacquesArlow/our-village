@@ -9,12 +9,12 @@ export default defineEventHandler(async (event) => {
   return {
     doctors: many(
       db,
-      "SELECT d.*,u.email FROM doctor d JOIN user u ON u.id=d.user_id ORDER BY d.created_at",
+      "SELECT d.*,u.email,u.disabledAt FROM doctor d JOIN user u ON u.id=d.user_id ORDER BY d.created_at",
     ),
     services: many(db, "SELECT * FROM service ORDER BY name"),
     patients: many(
       db,
-      "SELECT u.id,u.name,u.email,p.phone FROM user u LEFT JOIN patient_profile p ON p.user_id=u.id WHERE u.role='patient' ORDER BY u.name LIMIT 500",
+      "SELECT u.id,u.name,u.email,p.phone FROM user u LEFT JOIN patient_profile p ON p.user_id=u.id WHERE u.role='patient' AND u.disabledAt IS NULL ORDER BY u.name LIMIT 500",
     ),
     invoices: many(db, "SELECT * FROM invoice ORDER BY seq DESC LIMIT 200"),
     audit: many(

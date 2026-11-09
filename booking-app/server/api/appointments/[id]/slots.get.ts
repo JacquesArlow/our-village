@@ -7,8 +7,12 @@ export default defineEventHandler(async (event) => {
   const db = database(),
     row = appointmentFor(db, await actor(event), getRouterParam(event, "id")!),
     day = date(getQuery(event).date);
-  const doctor = one(db, "SELECT * FROM doctor WHERE id=?", row.doctor_id);
-  if (!doctor.active || !doctor.onboarded) return [];
+  const doctor = one(
+    db,
+    "SELECT d.* FROM doctor d JOIN user u ON u.id=d.user_id WHERE d.id=? AND u.disabledAt IS NULL",
+    row.doctor_id,
+  );
+  if (!doctor?.active || !doctor.onboarded) return [];
   const frozen = {
     duration_minutes:
       (Date.parse(row.end_at) - Date.parse(row.start_at)) / 60000,

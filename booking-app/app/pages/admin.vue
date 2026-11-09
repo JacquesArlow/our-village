@@ -3,18 +3,19 @@ const bookingFetch = useBookingRequest();
 definePageMeta({ middleware: "account" });
 const { money, number, when, today, clock, message, paidLabel } =
   useBookingUi();
-const { data, refresh } = await useFetch<any>(useBookingPath("/api/admin/overview"));
-const tab = ref("Doctors"),
+const { data, refresh } = await useFetch<any>(
+  useBookingPath("/api/admin/overview"),
+);
+const tab = ref("Users"),
   error = ref(""),
   notice = ref(""),
   busy = ref(false);
-const staff = reactive({ name: "", email: "", password: "" }),
-  billing = reactive({
-    patientId: "",
-    doctorId: "",
-    description: "",
-    price: "",
-  });
+const billing = reactive({
+  patientId: "",
+  doctorId: "",
+  description: "",
+  price: "",
+});
 const booking = reactive({
   patientId: "",
   doctorId: "",
@@ -23,10 +24,6 @@ const booking = reactive({
   start: "",
 });
 const slotOptions = ref<any[]>([]);
-const selectedPatient = ref<any>(null),
-  patientForm = reactive({ name: "", phone: "" }),
-  resetTarget = ref<any>(null),
-  resetPassword = ref("");
 const practice = reactive({
   ...data.value?.practice,
   vatPercent: (data.value?.practice.vatRateBps || 0) / 100,
@@ -43,6 +40,7 @@ const bookableDoctors = computed(() =>
   configuredDoctors.value.filter(
     (doctor: any) =>
       doctor.active &&
+      !doctor.disabledAt &&
       data.value.services.some(
         (service: any) => service.doctor_id === doctor.id && service.active,
       ),
@@ -91,14 +89,6 @@ async function perform(
     busy.value = false;
   }
 }
-async function addDoctor() {
-  const result = await perform(
-    "/api/admin/doctors",
-    staff,
-    "Doctor created. Share the temporary password securely; no email was sent.",
-  );
-  if (result) Object.assign(staff, { name: "", email: "", password: "" });
-}
 async function invoice() {
   const result = await perform(
     "/api/admin/invoices",
@@ -115,33 +105,6 @@ async function makeBooking() {
   );
   if (result) await navigateTo("/invoices/" + result.invoice.id);
 }
-function editPatient(patient: any) {
-  selectedPatient.value = patient;
-  Object.assign(patientForm, {
-    name: patient.name,
-    phone: patient.phone || "",
-  });
-}
-async function savePatient() {
-  const result = await perform(
-    "/api/admin/patients/" + selectedPatient.value.id,
-    patientForm,
-    "Patient contact details updated.",
-    "PATCH",
-  );
-  if (result) selectedPatient.value = null;
-}
-async function reset() {
-  const result = await perform(
-    "/api/admin/users/" + resetTarget.value.id + "/temporary-password",
-    { password: resetPassword.value },
-    "Temporary password set. Share securely; no email was sent.",
-  );
-  if (result) {
-    resetTarget.value = null;
-    resetPassword.value = "";
-  }
-}
 </script>
 <template>
   <section class="wrap section">
@@ -150,7 +113,7 @@ async function reset() {
         <p class="eyebrow">Practice administration</p>
         <h1>A connected view of your village</h1>
       </div>
-      <NuxtLink to="/" class="button secondary">Public booking view</NuxtLink>
+      <NuxtLink to="/" class="button secondary">Booking view</NuxtLink>
     </div>
     <div class="stats">
       <div>
@@ -177,7 +140,7 @@ async function reset() {
       <button
         v-for="label in [
           'Doctors',
-          'Patients',
+          'Users',
           'Bookings',
           'Invoices',
           'Practice',
@@ -193,7 +156,7 @@ async function reset() {
     </div>
     <p v-if="error" class="notice error" role="alert">{{ error }}</p>
     <p v-if="notice" class="notice success" role="status">{{ notice }}</p>
-    <div v-if="tab === 'Doctors'" class="dashboard-grid">
+    <div v-if="tab === 'Doctors'">
       <section class="panel">
         <h2>Your doctors</h2>
         <article
@@ -205,11 +168,13 @@ async function reset() {
             <h3>{{ doctor.name }}</h3>
             <p>{{ doctor.email }}</p>
             <span class="badge">{{
-              !doctor.active
-                ? "Hidden"
-                : doctor.onboarded
-                  ? "Calendar open"
-                  : "Setup required"
+              doctor.disabledAt
+                ? "Account disabled"
+                : !doctor.active
+                  ? "Hidden"
+                  : doctor.onboarded
+                    ? "Calendar open"
+                    : "Setup required"
             }}</span>
           </div>
           <div class="actions">
@@ -222,110 +187,21 @@ async function reset() {
               :to="'/doctor/get-started?doctorId=' + doctor.id"
               class="button small secondary"
               >Configure</NuxtLink
-            ><button
-              class="button small ghost"
-              @click="resetTarget = { id: doctor.user_id, name: doctor.name }"
             >
-              Reset password
-            </button>
           </div>
         </article>
       </section>
-      <form class="panel form-panel" @submit.prevent="addDoctor">
-        <h2>Add a doctor</h2>
-        <p class="hint">
-          New doctors must change their temporary password and complete calendar
-          setup. No email invitation is sent.
-        </p>
-        <label
-          >Doctor name<input
-            v-model="staff.name"
-            required
-            maxlength="100" /></label
-        ><label
-          >Login email<input
-            v-model="staff.email"
-            type="email"
-            required /></label
-        ><label
-          >Temporary password<input
-            v-model="staff.password"
-            type="password"
-            autocomplete="new-password"
-            minlength="12"
-            maxlength="128"
-            required /></label
-        ><button class="button" :disabled="busy">Create doctor account</button>
-      </form>
     </div>
-    <div v-if="tab === 'Patients'">
-      <section class="panel">
-        <h2>Patient accounts</h2>
-        <p class="hint">
-          Up to 500 accounts are shown. Only basic contact details are stored;
-          no clinical records.
-        </p>
-        <div
-          v-for="patient in data?.patients"
-          :key="patient.id"
-          class="directory-row"
-        >
-          <div>
-            <strong>{{ patient.name }}</strong
-            ><small
-              >{{ patient.email }} ·
-              {{ patient.phone || "No phone saved" }}</small
-            >
-          </div>
-          <div class="actions">
-            <button
-              class="button small secondary"
-              @click="editPatient(patient)"
-            >
-              Edit contact details</button
-            ><button
-              class="button small ghost"
-              @click="resetTarget = { id: patient.id, name: patient.name }"
-            >
-              Reset password
-            </button>
-          </div>
-        </div>
-        <p v-if="!data?.patients.length" class="empty">
-          No patients have registered yet.
-        </p>
-      </section>
-      <form
-        v-if="selectedPatient"
-        class="panel form-panel spaced"
-        @submit.prevent="savePatient"
-      >
-        <h2>Edit {{ selectedPatient.name }}</h2>
-        <label
-          >Name<input
-            v-model="patientForm.name"
-            required
-            maxlength="100" /></label
-        ><label
-          >Phone<input v-model="patientForm.phone" type="tel" maxlength="30"
-        /></label>
-        <div class="actions">
-          <button class="button" :disabled="busy">Save contact details</button
-          ><button
-            type="button"
-            class="button ghost"
-            @click="selectedPatient = null"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
+    <UserManagement v-if="tab === 'Users'" @changed="refresh()" />
     <div v-if="tab === 'Bookings' && !configuredDoctors.length" class="empty">
       Doctor calendars will appear here after onboarding is complete.
     </div>
     <div v-else-if="tab === 'Bookings'" class="dashboard-grid">
-      <form v-if="bookableDoctors.length" class="panel form-panel" @submit.prevent="makeBooking">
+      <form
+        v-if="bookableDoctors.length"
+        class="panel form-panel"
+        @submit.prevent="makeBooking"
+      >
         <h2>Book on behalf of a patient</h2>
         <p class="hint">
           The patient must first register and save their contact profile. A slot
@@ -536,38 +412,5 @@ async function reset() {
         ><small>{{ when(a.created_at) }}</small>
       </div>
     </section>
-    <form
-      v-if="resetTarget"
-      class="panel form-panel spaced"
-      @submit.prevent="reset"
-    >
-      <h2>Temporary password for {{ resetTarget.name }}</h2>
-      <p>
-        This revokes their existing sessions and requires a password change at
-        next sign-in. No email is sent.
-      </p>
-      <label
-        >New temporary password<input
-          v-model="resetPassword"
-          type="password"
-          minlength="12"
-          maxlength="128"
-          autocomplete="new-password"
-          required
-      /></label>
-      <div class="actions">
-        <button class="button" :disabled="busy">Set temporary password</button
-        ><button
-          type="button"
-          class="button ghost"
-          @click="
-            resetTarget = null;
-            resetPassword = '';
-          "
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
   </section>
 </template>

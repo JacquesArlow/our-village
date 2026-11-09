@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { accountHome } from "~~/shared/accounts";
+
 const bookingFetch = useBookingRequest();
 definePageMeta({ middleware: "account" });
 const form = reactive({ currentPassword: "", newPassword: "" }),
@@ -12,13 +14,7 @@ async function submit() {
   try {
     await bookingFetch("/api/account/password", { method: "POST", body: form });
     const a = await refresh();
-    await navigateTo(
-      a?.user.role === "admin"
-        ? "/admin"
-        : a?.user.role === "doctor"
-          ? "/doctor"
-          : "/account",
-    );
+    await navigateTo(a ? accountHome(a.user.role) : "/login");
   } catch (e) {
     error.value = message(e);
   } finally {

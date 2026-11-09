@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { accountHome } from "~~/shared/accounts";
+
 const bookingFetch = useBookingRequest();
 const props = defineProps<{ signup?: boolean }>();
 const loginRequired = useRuntimeConfig().public.bookingLoginRequired;
@@ -33,7 +35,9 @@ async function submit() {
         : "/account";
     const previewNext =
       typeof route.query.next === "string" &&
-      /^\/(?:$|(?:account|admin|doctor|doctors|invoices|pay|payment-return)(?:[/?#]|$))/.test(route.query.next) &&
+      /^\/(?:$|(?:account|admin|doctor|doctors|invoices|pay|payment-return|reception)(?:[/?#]|$))/.test(
+        route.query.next,
+      ) &&
       !route.query.next.includes("\\")
         ? route.query.next
         : null;
@@ -42,11 +46,9 @@ async function submit() {
         ? "/change-password"
         : loginRequired && previewNext
           ? previewNext
-          : account.user.role === "admin"
-            ? "/admin"
-            : account.user.role === "doctor"
-              ? "/doctor"
-              : next,
+          : account.user.role === "patient"
+            ? next
+            : accountHome(account.user.role),
     );
   } catch (e) {
     error.value = message(e);
@@ -65,7 +67,7 @@ async function submit() {
           ? "Create a patient account to manage appointments and invoices."
           : loginRequired
             ? "Sign in with your test account to open the private booking preview."
-            : "Sign in to your patient, doctor or admin workspace."
+            : "Sign in to your booking workspace."
       }}
     </p>
     <label v-if="signup"

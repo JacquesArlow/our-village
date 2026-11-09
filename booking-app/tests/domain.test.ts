@@ -11,6 +11,7 @@ import {
   slots,
   publishedDoctors,
   createAppointment,
+  appointmentFor,
   changeAppointment,
   doctorFor,
   saveDoctor,
@@ -30,6 +31,7 @@ import {
 } from "../server/core/schedule";
 import { verifyWebhook, handlePaymentEvent } from "../server/core/payments";
 import { instant } from "../server/core/validation";
+import { accountDirectory } from "../server/core/accounts";
 
 const now = Date.parse("2026-11-02T06:00:00Z"),
   start = "2026-11-03T07:00:00.000Z";
@@ -63,14 +65,20 @@ const otherPatient = {
   email: "other-patient@example.test",
   role: "patient" as const,
 };
+const receptionist = {
+  id: "receptionist",
+  name: "Reception",
+  email: "reception@example.test",
+  role: "receptionist" as const,
+};
 let db: ReturnType<typeof openDatabase>;
 beforeEach(() => {
   db = openDatabase(":memory:");
   db.exec(
-    "CREATE TABLE user(id TEXT PRIMARY KEY,name TEXT,email TEXT,role TEXT)",
+    "CREATE TABLE user(id TEXT PRIMARY KEY,name TEXT,email TEXT,role TEXT,disabledAt INTEGER)",
   );
   migrateDomain(db);
-  for (const u of [admin, doc, otherDoc, patient, otherPatient])
+  for (const u of [admin, doc, otherDoc, patient, otherPatient, receptionist])
     run(
       db,
       "INSERT INTO user(id,name,email,role) VALUES(?,?,?,?)",
@@ -131,6 +139,11 @@ const book = (who = patient, time = start, key = "request-one") =>
   );
 
 describe("doctor setup and scheduling", () => {
+  it("closes a disabled doctor's directory entry and availability", () => {
+    run(db, "UPDATE user SET disabledAt=? WHERE id=?", now, doc.id);
+    expect(publishedDoctors(db).map(({ id }) => id)).not.toContain("natasha");
+    expect(slots(db, "natasha-service", "2026-11-03", now)).toEqual([]);
+  });
   it("uses SAST without depending on the server timezone", () => {
     expect(localDay(Date.parse("2026-11-02T22:30:00Z"))).toBe("2026-11-03");
     const available = slots(db, "natasha-service", "2026-11-03", now);
@@ -224,6 +237,29 @@ describe("doctor setup and scheduling", () => {
     );
     expect(slots(db, "natasha-service", "2026-11-03", now)[0].start).toBe(
       "2026-11-03T08:00:00.000Z",
+    );
+  });
+});
+
+describe("reception access", () => {
+  it("lists patient contact fields and denies access to booking and billing records", () => {
+    expect(
+      accountDirectory(db, { q: otherPatient.email, role: "admin" }, true)
+        .users,
+    ).toEqual([
+      {
+        id: otherPatient.id,
+        name: otherPatient.name,
+        email: otherPatient.email,
+        phone: "0000000000",
+      },
+    ]);
+    const { appointment, invoice } = book();
+    expect(() => appointmentFor(db, receptionist, appointment.id)).toThrow(
+      "permission",
+    );
+    expect(() => invoiceFor(db, receptionist, invoice.id)).toThrow(
+      "permission",
     );
   });
 });

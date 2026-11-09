@@ -3,12 +3,13 @@ import type { DatabaseSync, SQLInputValue } from "node:sqlite";
 import { transaction } from "./database";
 import { fail, text, integer, instant, flag } from "./validation";
 import { candidateSlots, localDay, normaliseHours } from "./schedule";
+import type { AccountRole } from "../../shared/accounts";
 
 export interface Actor {
   id: string;
   name: string;
   email: string;
-  role: "admin" | "doctor" | "patient";
+  role: AccountRole;
   mustChangePassword?: boolean;
 }
 export const one = (
@@ -72,7 +73,8 @@ export function publishedDoctors(db: DatabaseSync) {
   return many(
     db,
     `SELECT d.id,d.name,d.title,d.description,d.location
-     FROM doctor d WHERE d.active=1 AND d.onboarded=1
+     FROM doctor d JOIN user u ON u.id=d.user_id
+     WHERE d.active=1 AND d.onboarded=1 AND u.disabledAt IS NULL
      AND EXISTS (SELECT 1 FROM service s WHERE s.doctor_id=d.id AND s.active=1)
      ORDER BY d.created_at`,
   ).map((doctor) => ({
@@ -99,7 +101,7 @@ export function slots(
   if (!service) return [];
   const doctor = one(
     db,
-    "SELECT * FROM doctor WHERE id=? AND active=1 AND onboarded=1",
+    "SELECT d.* FROM doctor d JOIN user u ON u.id=d.user_id WHERE d.id=? AND d.active=1 AND d.onboarded=1 AND u.disabledAt IS NULL",
     service.doctor_id,
   );
   if (!doctor) return [];
@@ -277,7 +279,7 @@ export function createAppointment(
     actor.role === "admin" ? text(input.patientId, "patient", 100) : actor.id;
   const patient = one(
     db,
-    "SELECT id FROM user WHERE id=? AND role=?",
+    "SELECT id FROM user WHERE id=? AND role=? AND disabledAt IS NULL",
     patientId,
     "patient",
   );
@@ -356,6 +358,7 @@ export function createAppointment(
   });
 }
 export function appointmentFor(db: DatabaseSync, actor: Actor, id: string) {
+  requireRole(actor, ["admin", "doctor", "patient"]);
   const row = one(db, "SELECT * FROM appointment WHERE id=?", id);
   if (!row) fail(404, "Appointment not found.");
   if (actor.role === "patient" && row.patient_id !== actor.id)
@@ -415,7 +418,16 @@ export function changeAppointment(
         "SELECT * FROM service WHERE id=?",
         row.service_id,
       );
-      if (!service?.active || !doctor.active || !doctor.onboarded)
+      if (
+        !service?.active ||
+        !doctor.active ||
+        !doctor.onboarded ||
+        !one(
+          db,
+          "SELECT id FROM user WHERE id=? AND disabledAt IS NULL",
+          doctor.user_id,
+        )
+      )
         fail(409, "Contact the practice to reschedule this appointment.");
       // Existing duration and buffers are snapshots; price edits never change a booked invoice.
       const frozenService = {
@@ -496,6 +508,7 @@ export function addBlock(
   });
 }
 export function invoiceFor(db: DatabaseSync, actor: Actor, id: string) {
+  requireRole(actor, ["admin", "doctor", "patient"]);
   const row = one(db, "SELECT * FROM invoice WHERE id=?", id);
   if (
     !row ||

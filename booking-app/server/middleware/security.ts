@@ -1,8 +1,28 @@
 import { fail } from "../core/validation";
-import { auth } from "../core/auth";
-import { appPrefix, bookingOrigin, bookingRoute, livePreview } from "../core/runtime";
+import { sessionActor } from "../utils/access";
+import {
+  appPrefix,
+  bookingOrigin,
+  bookingRoute,
+  livePreview,
+} from "../core/runtime";
 
-const guestPages = new Set(["/login", "/sign-in", "/api/health", "/logo.png", "/favicon.ico"]);
+const guestPages = new Set([
+  "/login",
+  "/sign-in",
+  "/api/health",
+  "/logo.png",
+  "/favicon.ico",
+]);
+const receptionApis = new Set([
+  "/api/me",
+  "/api/reception/patients",
+  "/api/public/config",
+  "/api/account/password",
+  "/api/auth/sign-in/email",
+  "/api/auth/sign-out",
+  "/api/auth/get-session",
+]);
 
 export default defineEventHandler(async (event) => {
   setHeaders(event, {
@@ -17,7 +37,8 @@ export default defineEventHandler(async (event) => {
   const path = bookingRoute(url.pathname).replace(/\/$/, "") || "/";
   const read = ["GET", "HEAD"].includes(event.method);
   if (path === "/api/payments/yoco/webhook") {
-    if (livePreview) fail(404, "The payment gateway is unavailable in this preview.");
+    if (livePreview)
+      fail(404, "The payment gateway is unavailable in this preview.");
     if (event.method === "POST") return;
   }
   if (!read) {
@@ -28,7 +49,16 @@ export default defineEventHandler(async (event) => {
     if (Number(getHeader(event, "content-length") || 0) > 16384)
       fail(413, "Request is too large.");
   }
-  if (!livePreview) return;
+  if (!livePreview) {
+    if (
+      path.startsWith("/api/") &&
+      getHeader(event, "cookie") &&
+      !receptionApis.has(path) &&
+      (await sessionActor(event))?.role === "receptionist"
+    )
+      fail(403, "This action is outside reception access.");
+    return;
+  }
   if (read && path === "/sign-up")
     return sendRedirect(event, appPrefix + "/login", 302);
   if (path === "/api/auth/sign-up/email")
@@ -36,9 +66,21 @@ export default defineEventHandler(async (event) => {
   if (read && (guestPages.has(path) || path.startsWith("/_nuxt/"))) return;
   if (event.method === "POST" && path === "/api/auth/sign-in/email") return;
 
-  const session = await auth.api.getSession({ headers: event.headers });
-  if (session?.user) return;
+  const user = await sessionActor(event);
+  if (user) {
+    if (
+      user.role === "receptionist" &&
+      path.startsWith("/api/") &&
+      !receptionApis.has(path)
+    )
+      fail(403, "This action is outside reception access.");
+    return;
+  }
   if (read && !path.startsWith("/api/"))
-    return sendRedirect(event, appPrefix + "/login?next=" + encodeURIComponent(path + url.search), 302);
+    return sendRedirect(
+      event,
+      appPrefix + "/login?next=" + encodeURIComponent(path + url.search),
+      302,
+    );
   fail(401, "Please sign in to continue.");
 });

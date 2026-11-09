@@ -13,8 +13,9 @@ The `staging` branch runs the booking pilot at
   appointment types/prices/buffers, weekly working periods and publishing.
 - Each doctor has their own list/week calendar, time off and appointment actions.
   Every access check is enforced server-side, not just by hiding UI links.
-- Admin doctor provisioning, patient contact management, password resets without
-  email, manual patient bookings, standalone invoices, billing settings and audit.
+- Admin user management covers patients, receptionists, doctors and administrators,
+  with account creation, edits, temporary passwords, deactivation and audit.
+- Reception has a read-only directory of patient names, emails and phone numbers.
 - All payment collection is for one Our Village Yoco account. Prices and invoices
   use integer ZAR cents. Existing invoice details and prices are snapshots.
 - A booking is held for 15 minutes. Overlap checks, buffers and invoice creation
@@ -110,9 +111,10 @@ Cloudflare source restrictions, strict TLS and no-index/no-cache headers apply.
 
 `compose.preview.yml` reuses the tested booking image in a separate container.
 It reads its own mode-0600 `.env.booking-preview` and uses the
-`ourvillage-booking-preview_booking_data` volume. Seeded preview accounts use
-`BOOKING_ADMIN_*`, `BOOKING_DOCTOR_*` and `BOOKING_PATIENT_*` and a separate
-`BETTER_AUTH_SECRET`. The server requires a session at the booking path and
+`ourvillage-booking-preview_booking_data` volume. Provision the initial named
+administrator with `BOOKING_ADMIN_*` and a separate `BETTER_AUTH_SECRET`, then
+create additional accounts in the admin panel. The live preview rejects reserved
+test addresses and public sign-ups. The server requires a session at the booking path and
 issues cookies scoped to `/booking`. This preview uses admin payment simulations.
 `ops/live-preview.nginx.conf` is included only by the production www vhost.
 

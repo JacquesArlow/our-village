@@ -1,6 +1,13 @@
 import { betterAuth } from "better-auth";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { database } from "./database";
-import { appPrefix, authPath, bookingOrigin, livePreview } from "./runtime";
+import {
+  appPrefix,
+  authPath,
+  bookingOrigin,
+  isTestAddress,
+  livePreview,
+} from "./runtime";
 
 export const auth = betterAuth({
   database: database(),
@@ -29,6 +36,12 @@ export const auth = betterAuth({
         defaultValue: false,
         input: false,
       },
+      disabledAt: {
+        type: "number",
+        required: false,
+        input: false,
+        returned: false,
+      },
     },
   },
   session: {
@@ -44,4 +57,18 @@ export const auth = betterAuth({
     ipAddress: { ipAddressHeaders: ["x-real-ip"] },
   },
   rateLimit: { enabled: true, window: 60, max: 30, storage: "database" },
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-in/email" || typeof ctx.body?.email !== "string")
+        return;
+      const email = ctx.body.email.trim().toLowerCase();
+      const user = database()
+        .prepare("SELECT disabledAt FROM user WHERE email=?")
+        .get(email);
+      if (user?.disabledAt || (livePreview && isTestAddress(email)))
+        throw new APIError("UNAUTHORIZED", {
+          message: "Invalid email or password.",
+        });
+    }),
+  },
 });

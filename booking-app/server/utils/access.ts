@@ -3,24 +3,42 @@ import { auth } from "../core/auth";
 import { database } from "../core/database";
 import { fail } from "../core/validation";
 import { one, run, type Actor } from "../core/store";
-import { appPrefix, bookingOrigin } from "../core/runtime";
+import {
+  appPrefix,
+  bookingOrigin,
+  isTestAddress,
+  livePreview,
+} from "../core/runtime";
+import { accountRoles } from "../../shared/accounts";
+
+export async function sessionActor(event: H3Event): Promise<Actor | null> {
+  if (event.context.bookingActor !== undefined)
+    return event.context.bookingActor;
+  const session = await auth.api.getSession({ headers: event.headers });
+  const user = session?.user
+    ? one(
+        database(),
+        "SELECT id,name,email,role,mustChangePassword,disabledAt FROM user WHERE id=?",
+        session.user.id,
+      )
+    : null;
+  const active =
+    user &&
+    !user.disabledAt &&
+    accountRoles.includes(user.role) &&
+    !(livePreview && isTestAddress(user.email));
+  return (event.context.bookingActor = active ? (user as Actor) : null);
+}
 
 export async function actor(
   event: H3Event,
   allowPasswordChange = false,
 ): Promise<Actor> {
-  const session = await auth.api.getSession({ headers: event.headers });
-  if (!session?.user) fail(401, "Please sign in to continue.");
-  const user = one(
-    database(),
-    "SELECT id,name,email,role,mustChangePassword FROM user WHERE id=?",
-    session.user.id,
-  );
-  if (!user || !["admin", "doctor", "patient"].includes(user.role))
-    fail(403, "Account access is not configured.");
+  const user = await sessionActor(event);
+  if (!user) fail(401, "Please sign in to continue.");
   if (user.mustChangePassword && !allowPasswordChange)
     fail(403, "Change your temporary password before continuing.");
-  return user as Actor;
+  return user;
 }
 export function throttle(event: H3Event, scope: string, max = 60) {
   const db = database(),
