@@ -66,6 +66,7 @@ jobs:
             --exclude='.git' \
             --exclude='.env' \
             --exclude='.env.booking-preview' \
+            --exclude='.env.booking-desk' \
             "$GITHUB_WORKSPACE/" "${{ steps.env.outputs.dir }}/"
 
       - name: Write deploy .env from GitHub Secrets
@@ -146,5 +147,6 @@ jobs:
         run: |
           cd "${{ steps.env.outputs.dir }}"
           test -s .env.booking-preview
+          test -s .env.booking-desk
           docker compose -f booking-app/compose.preview.yml -p ourvillage-booking-preview \
             up -d --no-build --remove-orphans --wait --wait-timeout 60

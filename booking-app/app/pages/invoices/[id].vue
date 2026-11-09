@@ -10,7 +10,9 @@ const {
   refresh,
   error: loadError,
 } = await useFetch<any>(useBookingPath("/api/invoices/" + route.params.id));
-const { data: config } = await useFetch<any>(useBookingPath("/api/public/config"));
+const { data: config } = await useFetch<any>(
+  useBookingPath("/api/public/config"),
+);
 const error = ref(""),
   link = ref(""),
   busy = ref(false);
@@ -188,9 +190,7 @@ const copy = async () => {
           <div class="actions">
             <button class="button small secondary" @click="copy">
               Copy link</button
-            ><NuxtLink
-              :to="link.replace(/^https?:\/\/[^/]+/, '')"
-              class="button small secondary"
+            ><NuxtLink :to="link" external class="button small secondary"
               >Open payment page</NuxtLink
             >
           </div>

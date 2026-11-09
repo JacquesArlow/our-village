@@ -3,7 +3,13 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   css: ["~/assets/app.css"],
   nitro: { preset: "node-server" },
-  runtimeConfig: { public: { bookingLoginRequired: false } },
+  runtimeConfig: {
+    public: {
+      bookingLoginRequired: false,
+      bookingAudience: "mixed",
+      turnstileSiteKey: "",
+    },
+  },
   app: {
     head: {
       title: "Our Village Appointments",

@@ -1,6 +1,11 @@
 import { database } from "../core/database";
-import { livePreview } from "../core/runtime";
+import { livePreview, staffDesk } from "../core/runtime";
 export default defineEventHandler(() => {
-  database().prepare("SELECT 1 FROM doctor LIMIT 1").get();
-  return { ok: true, app: "our-village-bookings", mode: livePreview ? "live-preview" : "staging" };
+  database().prepare("SELECT disabledAt FROM user LIMIT 1").get();
+  return {
+    ok: true,
+    app: "our-village-bookings",
+    mode: livePreview ? "live-preview" : "staging",
+    audience: livePreview ? (staffDesk ? "staff" : "patient") : "mixed",
+  };
 });

@@ -5,6 +5,7 @@ import { fail } from "../core/validation";
 import { one, run, type Actor } from "../core/store";
 import {
   appPrefix,
+  audienceAllows,
   bookingOrigin,
   isTestAddress,
   livePreview,
@@ -26,6 +27,7 @@ export async function sessionActor(event: H3Event): Promise<Actor | null> {
     user &&
     !user.disabledAt &&
     accountRoles.includes(user.role) &&
+    audienceAllows(user.role) &&
     !(livePreview && isTestAddress(user.email));
   return (event.context.bookingActor = active ? (user as Actor) : null);
 }
@@ -61,4 +63,8 @@ export function throttle(event: H3Event, scope: string, max = 60) {
 }
 export function publicBase() {
   return bookingOrigin + appPrefix;
+}
+
+export function paymentBase() {
+  return livePreview ? bookingOrigin + "/booking" : publicBase();
 }

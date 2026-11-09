@@ -1,9 +1,9 @@
 # Our Village appointment pilot
 
 The `staging` branch runs the booking pilot at
-`https://staging.our-village.co.za` and the private live-domain preview at
-`https://www.our-village.co.za/booking/`. The live preview sign-in is at
-`/booking/login`. Booking screens and APIs require a preview account.
+`https://staging.our-village.co.za` and the private live-domain workspaces.
+Staff enter through `/village-desk` and patients sign in at `/booking/login`.
+Both use the same account database and enforce their audience on the server.
 
 ## Included in this pilot
 
@@ -109,13 +109,16 @@ On staging, browser routes and ordinary API routes are behind Nginx basic auth.
 the application rejects unverified requests. Do not exempt the whole `/api` path.
 Cloudflare source restrictions, strict TLS and no-index/no-cache headers apply.
 
-`compose.preview.yml` reuses the tested booking image in a separate container.
-It reads its own mode-0600 `.env.booking-preview` and uses the
+`compose.preview.yml` runs the tested image for patients and for staff.
+They share the mode-0600 `.env.booking-preview` and the
 `ourvillage-booking-preview_booking_data` volume. Provision the initial named
 administrator with `BOOKING_ADMIN_*` and a separate `BETTER_AUTH_SECRET`, then
 create additional accounts in the admin panel. The live preview rejects reserved
-test addresses and public sign-ups. The server requires a session at the booking path and
-issues cookies scoped to `/booking`. This preview uses admin payment simulations.
+test addresses and public sign-ups. Both services validate the same host-only
+session cookie and restrict the workspace by role. The Desk additionally reads
+`.env.booking-desk` for Turnstile. The existing event planner validates the Desk
+session over the internal `ourvillage-desk-auth` network.
+This preview uses admin payment simulations.
 `ops/live-preview.nginx.conf` is included only by the production www vhost.
 
 To register the callback once credentials are available, use Yoco's server-side

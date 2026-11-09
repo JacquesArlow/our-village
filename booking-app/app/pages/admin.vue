@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const bookingFetch = useBookingRequest();
+const staff = useRuntimeConfig().public.bookingAudience === "staff";
 definePageMeta({ middleware: "account" });
 const { money, number, when, today, clock, message, paidLabel } =
   useBookingUi();
@@ -113,7 +114,9 @@ async function makeBooking() {
         <p class="eyebrow">Practice administration</p>
         <h1>A connected view of your village</h1>
       </div>
-      <NuxtLink to="/" class="button secondary">Booking view</NuxtLink>
+      <NuxtLink v-if="!staff" to="/" class="button secondary"
+        >Booking view</NuxtLink
+      >
     </div>
     <div class="stats">
       <div>

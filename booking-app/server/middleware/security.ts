@@ -5,6 +5,7 @@ import {
   bookingOrigin,
   bookingRoute,
   livePreview,
+  staffDesk,
 } from "../core/runtime";
 
 const guestPages = new Set([
@@ -25,16 +26,17 @@ const receptionApis = new Set([
 ]);
 
 export default defineEventHandler(async (event) => {
+  const url = getRequestURL(event);
+  const path = bookingRoute(url.pathname).replace(/\/$/, "") || "/";
+  const deskLogin = staffDesk && (path === "/login" || path === "/sign-in");
+  const turnstile = deskLogin ? " https://challenges.cloudflare.com" : "";
   setHeaders(event, {
     "Cache-Control": "private, no-store",
     "X-Robots-Tag": "noindex, nofollow, noarchive",
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "same-origin",
-    "Content-Security-Policy":
-      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+    "Content-Security-Policy": `default-src 'self'; script-src 'self' 'unsafe-inline'${turnstile}; frame-src 'self'${turnstile}; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
   });
-  const url = getRequestURL(event);
-  const path = bookingRoute(url.pathname).replace(/\/$/, "") || "/";
   const read = ["GET", "HEAD"].includes(event.method);
   if (path === "/api/payments/yoco/webhook") {
     if (livePreview)
@@ -61,6 +63,14 @@ export default defineEventHandler(async (event) => {
   }
   if (read && path === "/sign-up")
     return sendRedirect(event, appPrefix + "/login", 302);
+  const staffPage = /^\/(admin|doctor|reception)(\/|$)/.test(path);
+  const patientPage = /^\/(account|doctors|pay|payment-return)(\/|$)/.test(
+    path,
+  );
+  if (read && (staffDesk ? patientPage : staffPage)) {
+    setResponseStatus(event, 404);
+    return "Page not found.";
+  }
   if (path === "/api/auth/sign-up/email")
     fail(404, "Account registration is closed for this preview.");
   if (read && (guestPages.has(path) || path.startsWith("/_nuxt/"))) return;

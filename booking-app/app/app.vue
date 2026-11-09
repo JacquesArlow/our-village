@@ -2,7 +2,9 @@
 const logo = useBookingPath("/logo.png");
 const bookingFetch = useBookingRequest();
 const { account, refresh } = useAccount();
-const loginRequired = useRuntimeConfig().public.bookingLoginRequired;
+const configPublic = useRuntimeConfig().public;
+const loginRequired = configPublic.bookingLoginRequired;
+const staff = configPublic.bookingAudience === "staff";
 const loginPath = useBookingPath("/login");
 const route = useRoute();
 const loginPage = computed(() =>
@@ -10,7 +12,10 @@ const loginPage = computed(() =>
 );
 const showWorkspace = computed(() => !loginRequired || !!account.value);
 const showDoctorDirectory = computed(
-  () => showWorkspace.value && account.value?.user.role !== "receptionist",
+  () =>
+    !staff &&
+    showWorkspace.value &&
+    account.value?.user.role !== "receptionist",
 );
 const { data: config, refresh: refreshConfig } = await useFetch<any>(
   useBookingPath("/api/public/config"),
@@ -50,7 +55,8 @@ async function logout() {
         :to="account?.user.role === 'receptionist' ? '/reception' : '/'"
         class="brand"
         ><img :src="logo" alt="Our Village" width="126" height="68" /><span
-          >Appointments<small>Care that grows with you</small></span
+          >{{ staff ? "Village Desk" : "Appointments"
+          }}<small>Care that grows with you</small></span
         ></NuxtLink
       >
       <nav aria-label="Main navigation">
@@ -65,6 +71,11 @@ async function logout() {
         >
         <NuxtLink v-if="account?.user.role === 'admin'" to="/admin"
           >Admin console</NuxtLink
+        >
+        <a
+          v-if="staff && account?.user.role === 'admin'"
+          href="/village-desk/events"
+          >Events calendar</a
         >
         <NuxtLink v-if="account?.user.role === 'receptionist'" to="/reception"
           >Patient directory</NuxtLink

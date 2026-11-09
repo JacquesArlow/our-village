@@ -1,5 +1,8 @@
+import { accountHome } from "~~/shared/accounts";
+
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (!useRuntimeConfig().public.bookingLoginRequired) return;
+  const config = useRuntimeConfig().public;
+  if (!config.bookingLoginRequired) return;
   if (["/login", "/sign-in"].includes(to.path.replace(/\/$/, ""))) return;
   if (to.path.replace(/\/$/, "") === "/sign-up") return navigateTo("/login");
 
@@ -9,6 +12,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return navigateTo({ path: "/login", query: { next: to.fullPath } });
   if (account.user.mustChangePassword && to.path !== "/change-password")
     return navigateTo("/change-password");
+  if (config.bookingAudience === "staff" && to.path === "/")
+    return navigateTo(accountHome(account.user.role));
   if (
     account.user.role === "receptionist" &&
     !["/reception", "/change-password", "/privacy"].includes(to.path)

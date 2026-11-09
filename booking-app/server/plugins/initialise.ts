@@ -2,7 +2,12 @@ import { getMigrations } from "better-auth/db/migration";
 import { auth } from "../core/auth";
 import { database, migrateDomain, transaction } from "../core/database";
 import { many, one, run } from "../core/store";
-import { appPrefix, isTestAddress, livePreview } from "../core/runtime";
+import {
+  appPrefix,
+  isTestAddress,
+  livePreview,
+  staffDesk,
+} from "../core/runtime";
 
 export default defineNitroPlugin(async () => {
   if (process.env.APP_MODE !== "staging" && !livePreview)
@@ -23,14 +28,26 @@ export default defineNitroPlugin(async () => {
     throw new Error("Only Yoco test keys are accepted by this staging app.");
   if (
     livePreview &&
-    (appPrefix !== "/booking" ||
+    (appPrefix !== (staffDesk ? "/village-desk" : "/booking") ||
+      useRuntimeConfig().public.bookingAudience !==
+        (staffDesk ? "staff" : "patient") ||
       useRuntimeConfig().public.bookingLoginRequired !== true ||
       process.env.YOCO_SECRET_KEY ||
       process.env.YOCO_WEBHOOK_SECRET)
   )
     throw new Error(
-      "The live preview requires /booking, account access and simulated payments.",
+      "The live preview requires the correct workspace, account access and simulated payments.",
     );
+  if (staffDesk) {
+    if (
+      !process.env.TURNSTILE_SECRET_KEY ||
+      !useRuntimeConfig().public.turnstileSiteKey
+    )
+      throw new Error("Village Desk sign-in requires Turnstile.");
+    // The patient service runs migrations before the Desk service starts.
+    database().prepare("SELECT disabledAt FROM user LIMIT 1").get();
+    return;
+  }
   const migrations = await getMigrations(auth.options);
   await migrations.runMigrations();
   const db = database();

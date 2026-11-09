@@ -1,4 +1,4 @@
-import { actor, publicBase } from "../../../utils/access";
+import { actor, paymentBase } from "../../../utils/access";
 import { database } from "../../../core/database";
 import { createPaymentLink } from "../../../core/store";
 export default defineEventHandler(async (event) =>
@@ -6,6 +6,6 @@ export default defineEventHandler(async (event) =>
     database(),
     await actor(event),
     getRouterParam(event, "id")!,
-    publicBase(),
+    paymentBase(),
   ),
 );

@@ -1,5 +1,5 @@
 services:
-  web:
+  web: &preview
     image: ourvillage-booking-staging:latest
     container_name: ourvillage-booking-preview
     restart: unless-stopped
@@ -7,11 +7,13 @@ services:
       - "127.0.0.1:8195:3000"
     env_file:
       - ../.env.booking-preview
-    environment:
+    environment: &preview-environment
       APP_MODE: live-preview
       NODE_ENV: production
       NUXT_APP_BASE_URL: /booking/
       NUXT_PUBLIC_BOOKING_LOGIN_REQUIRED: "true"
+      BOOKING_AUDIENCE: patient
+      NUXT_PUBLIC_BOOKING_AUDIENCE: patient
       BETTER_AUTH_URL: https://www.our-village.co.za
       BOOKING_DATABASE_PATH: /data/bookings.db
       EMAIL_MODE: "off"
@@ -31,9 +33,42 @@ services:
         - CMD
         - node
         - -e
-        - "fetch('http://127.0.0.1:3000/booking/api/health').then(r=>r.json()).then(x=>process.exit(x.ok && x.mode==='live-preview'?0:1)).catch(()=>process.exit(1))"
+        - "fetch('http://127.0.0.1:3000/booking/api/health').then(r=>r.json()).then(x=>process.exit(x.ok && x.audience==='patient'?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 4
+  desk:
+    <<: *preview
+    container_name: ourvillage-booking-desk
+    ports:
+      - "127.0.0.1:8197:3000"
+    env_file:
+      - ../.env.booking-preview
+      - ../.env.booking-desk
+    environment:
+      <<: *preview-environment
+      NUXT_APP_BASE_URL: /village-desk/
+      BOOKING_AUDIENCE: staff
+      NUXT_PUBLIC_BOOKING_AUDIENCE: staff
+      NUXT_PUBLIC_TURNSTILE_SITE_KEY: 0x4AAAAAADtYo8RIuX2zPY2f
+    depends_on:
+      web:
+        condition: service_healthy
+    networks:
+      - default
+      - desk-auth
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/village-desk/api/health').then(r=>r.json()).then(x=>process.exit(x.ok && x.audience==='staff'?0:1)).catch(()=>process.exit(1))"
       interval: 10s
       timeout: 5s
       retries: 4
 volumes:
   booking_data:
+networks:
+  desk-auth:
+    external: true
+    name: ourvillage-desk-auth
