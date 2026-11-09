@@ -27,7 +27,7 @@ useHead({ title: `${pretty} — Village Desk` })
   <div class="min-h-screen bg-base-200">
     <header class="border-b border-base-300 bg-base-100/80 backdrop-blur">
       <div class="container-px flex h-16 items-center">
-        <NuxtLink to="/village-desk" class="btn btn-ghost btn-sm">‹ Back to planner</NuxtLink>
+        <NuxtLink to="/village-desk/events" class="btn btn-ghost btn-sm">‹ Back to planner</NuxtLink>
       </div>
     </header>
 

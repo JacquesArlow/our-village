@@ -55,7 +55,7 @@ export default defineNuxtConfig({
   },
   routeRules: {
     '/api/**': { headers: { 'x-robots-tag': 'noindex, nofollow' } },
-    '/village-desk': { headers: { 'x-robots-tag': 'noindex, nofollow' } },
-    '/village-desk/**': { headers: { 'x-robots-tag': 'noindex, nofollow' } }
+    '/village-desk': { headers: { 'x-robots-tag': 'noindex, nofollow', 'cache-control': 'private, no-store' } },
+    '/village-desk/**': { headers: { 'x-robots-tag': 'noindex, nofollow', 'cache-control': 'private, no-store' } }
   }
 })

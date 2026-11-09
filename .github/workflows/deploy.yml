@@ -108,8 +108,12 @@ jobs:
           export IMAGE_NAME="${{ steps.env.outputs.image }}"
           export CONTAINER_NAME="${{ steps.env.outputs.container }}"
           export HOST_PORT="${{ steps.env.outputs.port }}"
-          docker compose -p "${{ steps.env.outputs.project }}" build --no-cache
-          docker compose -p "${{ steps.env.outputs.project }}" up -d --remove-orphans
+          files=(-f docker-compose.yml)
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            files+=(-f docker-compose.desk.yml)
+          fi
+          docker compose "${files[@]}" -p "${{ steps.env.outputs.project }}" build --no-cache
+          docker compose "${files[@]}" -p "${{ steps.env.outputs.project }}" up -d --remove-orphans
 
       - name: Health check
         run: |

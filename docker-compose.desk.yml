@@ -1,0 +1,11 @@
+services:
+  web:
+    environment:
+      BOOKING_DESK_AUTH_URL: http://ourvillage-booking-desk:3000/village-desk/api/me
+    networks:
+      - default
+      - desk-auth
+networks:
+  desk-auth:
+    external: true
+    name: ourvillage-desk-auth
