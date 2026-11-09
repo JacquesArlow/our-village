@@ -7,5 +7,5 @@ export default defineEventHandler(async (event) => {
   if (!session?.user || !adminEmail || session.user.email.toLowerCase() !== adminEmail) {
     return { url: null }
   }
-  return { url: 'https://staging.our-village.co.za/admin' }
+  return { url: '/booking/admin' }
 })
