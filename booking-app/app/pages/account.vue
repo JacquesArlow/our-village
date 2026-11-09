@@ -1,9 +1,10 @@
 <script setup lang="ts">
+const bookingFetch = useBookingRequest();
 definePageMeta({ middleware: "account" });
 const { account, refresh: refreshAccount } = useAccount(),
   { money, when, number, message, paidLabel } = useBookingUi(),
   route = useRoute();
-const { data, refresh } = await useFetch<any>("/api/patient/dashboard");
+const { data, refresh } = await useFetch<any>(useBookingPath("/api/patient/dashboard"));
 const form = reactive({
     phone: account.value?.patient?.phone || "",
     consent: false,
@@ -15,7 +16,7 @@ async function save() {
   busy.value = true;
   error.value = "";
   try {
-    await $fetch("/api/account/profile", { method: "POST", body: form });
+    await bookingFetch("/api/account/profile", { method: "POST", body: form });
     await refreshAccount();
     saved.value = true;
     const next = route.query.next;

@@ -3,16 +3,15 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   css: ["~/assets/app.css"],
   nitro: { preset: "node-server" },
-  runtimeConfig: { public: { siteUrl: "https://staging.our-village.co.za" } },
+  runtimeConfig: { public: { bookingLoginRequired: false } },
   app: {
     head: {
-      title: "Our Village Appointments — Private Staging",
+      title: "Our Village Appointments",
       htmlAttrs: { lang: "en-ZA" },
       meta: [
         { name: "robots", content: "noindex, nofollow, noarchive" },
         { name: "viewport", content: "width=device-width, initial-scale=1" },
       ],
-      link: [{ rel: "icon", href: "/favicon.ico" }],
     },
   },
   routeRules: {

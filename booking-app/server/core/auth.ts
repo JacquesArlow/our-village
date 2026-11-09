@@ -1,11 +1,13 @@
 import { betterAuth } from "better-auth";
 import { database } from "./database";
+import { appPrefix, authPath, bookingOrigin, livePreview } from "./runtime";
 
 export const auth = betterAuth({
   database: database(),
   secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
-  trustedOrigins: [process.env.BETTER_AUTH_URL || "http://localhost:3000"],
+  baseURL: bookingOrigin,
+  basePath: authPath,
+  trustedOrigins: [bookingOrigin],
   appName: "Our Village Appointments",
   emailAndPassword: {
     enabled: true,
@@ -35,7 +37,8 @@ export const auth = betterAuth({
     cookieCache: { enabled: false },
   },
   advanced: {
-    cookiePrefix: "ov-bookings-staging",
+    cookiePrefix: livePreview ? "ov-bookings-preview" : "ov-bookings-staging",
+    defaultCookieAttributes: { path: appPrefix || "/" },
     useSecureCookies:
       process.env.BETTER_AUTH_URL?.startsWith("https://") ?? false,
     ipAddress: { ipAddressHeaders: ["x-real-ip"] },

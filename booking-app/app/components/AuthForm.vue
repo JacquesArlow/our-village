@@ -1,5 +1,7 @@
 <script setup lang="ts">
+const bookingFetch = useBookingRequest();
 const props = defineProps<{ signup?: boolean }>();
+const loginRequired = useRuntimeConfig().public.bookingLoginRequired;
 const form = reactive({ name: "", email: "", password: "", consent: false }),
   busy = ref(false),
   error = ref("");
@@ -14,7 +16,7 @@ async function submit() {
   busy.value = true;
   error.value = "";
   try {
-    await $fetch(
+    await bookingFetch(
       props.signup ? "/api/auth/sign-up/email" : "/api/auth/sign-in/email",
       {
         method: "POST",
@@ -29,14 +31,22 @@ async function submit() {
       /^\/(doctors\/|account(?:\?|$))/.test(route.query.next)
         ? route.query.next
         : "/account";
+    const previewNext =
+      typeof route.query.next === "string" &&
+      /^\/(?:$|(?:account|admin|doctor|doctors|invoices|pay|payment-return)(?:[/?#]|$))/.test(route.query.next) &&
+      !route.query.next.includes("\\")
+        ? route.query.next
+        : null;
     await navigateTo(
       account.user.mustChangePassword
         ? "/change-password"
-        : account.user.role === "admin"
-          ? "/admin"
-          : account.user.role === "doctor"
-            ? "/doctor"
-            : next,
+        : loginRequired && previewNext
+          ? previewNext
+          : account.user.role === "admin"
+            ? "/admin"
+            : account.user.role === "doctor"
+              ? "/doctor"
+              : next,
     );
   } catch (e) {
     error.value = message(e);
@@ -46,14 +56,16 @@ async function submit() {
 }
 </script>
 <template>
-  <form class="panel form-panel" @submit.prevent="submit">
+  <form class="panel form-panel" method="post" @submit.prevent="submit">
     <p class="eyebrow">Our Village appointments</p>
     <h1>{{ signup ? "Your village starts here" : "Welcome back" }}</h1>
     <p class="muted">
       {{
         signup
           ? "Create a patient account to manage appointments and invoices."
-          : "Sign in to your patient, doctor or admin workspace."
+          : loginRequired
+            ? "Sign in with your test account to open the private booking preview."
+            : "Sign in to your patient, doctor or admin workspace."
       }}
     </p>
     <label v-if="signup"
@@ -97,7 +109,7 @@ async function submit() {
         busy ? "Please wait…" : signup ? "Create patient account" : "Sign in"
       }}
     </button>
-    <p>
+    <p v-if="!loginRequired">
       <NuxtLink :to="signup ? '/sign-in' : '/sign-up'">{{
         signup
           ? "Already registered? Sign in"
@@ -106,7 +118,7 @@ async function submit() {
     </p>
     <p class="hint">
       No emails, verification messages or password-reset emails are sent in this
-      staging pilot. Ask the testing administrator if you lose access.
+      preview. Ask the testing administrator if you lose access.
     </p>
   </form>
 </template>

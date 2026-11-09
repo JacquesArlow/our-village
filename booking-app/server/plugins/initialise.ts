@@ -2,24 +2,31 @@ import { getMigrations } from "better-auth/db/migration";
 import { auth } from "../core/auth";
 import { database, migrateDomain } from "../core/database";
 import { one, run } from "../core/store";
+import { appPrefix, livePreview } from "../core/runtime";
 
 export default defineNitroPlugin(async () => {
-  if (process.env.APP_MODE !== "staging")
+  if (process.env.APP_MODE !== "staging" && !livePreview)
     throw new Error(
-      "The booking pilot is staging-only. Set APP_MODE=staging; production release needs separate approval.",
+      "Set APP_MODE to staging or live-preview for the booking pilot.",
     );
   if (
     !process.env.BETTER_AUTH_SECRET ||
     process.env.BETTER_AUTH_SECRET.length < 32
   )
     throw new Error(
-      "An isolated staging auth secret of at least 32 characters is required.",
+      "An isolated booking auth secret of at least 32 characters is required.",
     );
   if (
     process.env.YOCO_SECRET_KEY &&
     !process.env.YOCO_SECRET_KEY.startsWith("sk_test_")
   )
     throw new Error("Only Yoco test keys are accepted by this staging app.");
+  if (livePreview && (
+    appPrefix !== "/booking" ||
+    useRuntimeConfig().public.bookingLoginRequired !== true ||
+    process.env.YOCO_SECRET_KEY ||
+    process.env.YOCO_WEBHOOK_SECRET
+  )) throw new Error("The live preview requires /booking, account access and simulated payments.");
   const migrations = await getMigrations(auth.options);
   await migrations.runMigrations();
   const db = database();
@@ -36,6 +43,12 @@ export default defineNitroPlugin(async () => {
       password: process.env.BOOKING_DOCTOR_PASSWORD,
       name: "Dr Natasha Bartie",
       role: "doctor",
+    },
+    {
+      email: process.env.BOOKING_PATIENT_EMAIL,
+      password: process.env.BOOKING_PATIENT_PASSWORD,
+      name: "Our Village Test Patient",
+      role: "patient",
     },
   ]) {
     if (!config.email || !config.password) continue;

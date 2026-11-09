@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const bookingFetch = useBookingRequest();
 definePageMeta({ middleware: "account" });
 const form = reactive({ currentPassword: "", newPassword: "" }),
   busy = ref(false),
@@ -9,7 +10,7 @@ async function submit() {
   busy.value = true;
   error.value = "";
   try {
-    await $fetch("/api/account/password", { method: "POST", body: form });
+    await bookingFetch("/api/account/password", { method: "POST", body: form });
     const a = await refresh();
     await navigateTo(
       a?.user.role === "admin"

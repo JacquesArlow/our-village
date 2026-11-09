@@ -1,5 +1,7 @@
 <script setup lang="ts">
-const { data: doctors, error } = await useFetch<any[]>("/api/public/doctors", {
+const loginRequired = useRuntimeConfig().public.bookingLoginRequired;
+const doctorPhoto = useBookingPath("/natasha.webp");
+const { data: doctors, error } = await useFetch<any[]>(useBookingPath("/api/public/doctors"), {
   key: "public-doctors",
 });
 </script>
@@ -14,7 +16,7 @@ const { data: doctors, error } = await useFetch<any[]>("/api/public/doctors", {
       </p>
       <div v-if="doctors?.length" class="hero-actions">
         <a href="#doctors" class="button">Explore doctors</a
-        ><NuxtLink to="/sign-up" class="button secondary"
+        ><NuxtLink v-if="!loginRequired" to="/sign-up" class="button secondary"
           >Create a patient account</NuxtLink
         >
       </div>
@@ -41,7 +43,7 @@ const { data: doctors, error } = await useFetch<any[]>("/api/public/doctors", {
       <article v-for="doctor in doctors" :key="doctor.id" class="doctor-card">
         <img
           v-if="doctor.id === 'dr-natasha-bartie'"
-          src="/natasha.webp"
+          :src="doctorPhoto"
           alt="Dr Natasha Bartie"
           class="doctor-photo"
         />

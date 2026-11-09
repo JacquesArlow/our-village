@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const bookingFetch = useBookingRequest();
 definePageMeta({ middleware: "account" });
 const route = useRoute(),
   { account } = useAccount(),
@@ -12,7 +13,7 @@ const day = ref(today()),
   view = ref("list"),
   error = ref(""),
   busy = ref(false);
-const { data, refresh } = await useFetch<any>("/api/manage", {
+const { data, refresh } = await useFetch<any>(useBookingPath("/api/manage"), {
   query: { doctorId, date: day },
 });
 const block = reactive({ start: "", end: "", label: "Unavailable" });
@@ -55,7 +56,7 @@ async function addBlock() {
   error.value = "";
   busy.value = true;
   try {
-    await $fetch("/api/manage/blocks", {
+    await bookingFetch("/api/manage/blocks", {
       method: "POST",
       body: {
         doctorId: data.value.doctor.id,
@@ -76,7 +77,7 @@ async function addBlock() {
 async function removeBlock(id: string) {
   error.value = "";
   try {
-    await $fetch("/api/manage/blocks/" + id, { method: "DELETE", body: {} });
+    await bookingFetch("/api/manage/blocks/" + id, { method: "DELETE", body: {} });
     await refresh();
   } catch (e) {
     error.value = message(e);

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const logo = useBookingPath("/logo.png");
+const bookingFetch = useBookingRequest();
 definePageMeta({ middleware: "account" });
 const route = useRoute(),
   { account } = useAccount(),
@@ -7,8 +9,8 @@ const {
   data,
   refresh,
   error: loadError,
-} = await useFetch<any>("/api/invoices/" + route.params.id);
-const { data: config } = await useFetch<any>("/api/public/config");
+} = await useFetch<any>(useBookingPath("/api/invoices/" + route.params.id));
+const { data: config } = await useFetch<any>(useBookingPath("/api/public/config"));
 const error = ref(""),
   link = ref(""),
   busy = ref(false);
@@ -16,7 +18,7 @@ async function checkout() {
   busy.value = true;
   error.value = "";
   try {
-    const result = await $fetch<any>(
+    const result = await bookingFetch<any>(
       "/api/invoices/" + route.params.id + "/checkout",
       { method: "POST", body: {} },
     );
@@ -30,7 +32,7 @@ async function checkout() {
 async function generateLink() {
   error.value = "";
   try {
-    const result = await $fetch<any>(
+    const result = await bookingFetch<any>(
       "/api/invoices/" + route.params.id + "/link",
       { method: "POST", body: {} },
     );
@@ -49,7 +51,7 @@ async function simulate() {
   busy.value = true;
   error.value = "";
   try {
-    await $fetch("/api/invoices/" + route.params.id + "/simulate", {
+    await bookingFetch("/api/invoices/" + route.params.id + "/simulate", {
       method: "POST",
       body: {},
     });
@@ -87,7 +89,7 @@ const copy = async () => {
       <article class="panel invoice-document">
         <div class="invoice-header">
           <div>
-            <img src="/logo.png" alt="Our Village" width="130" />
+            <img :src="logo" alt="Our Village" width="130" />
             <h2>{{ data.practice.name }}</h2>
             <p class="pre-line">{{ data.practice.address }}</p>
             <p v-if="data.practice.registrationNumber" class="hint">

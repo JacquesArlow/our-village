@@ -1,17 +1,18 @@
 <script setup lang="ts">
+const bookingFetch = useBookingRequest();
 const route = useRoute(),
   { money, number, message, paidLabel } = useBookingUi();
 const { data, error: loadError } = await useFetch<any>(
-  "/api/pay/" + route.params.token,
+  useBookingPath("/api/pay/" + route.params.token),
 );
-const { data: config } = await useFetch<any>("/api/public/config");
+const { data: config } = await useFetch<any>(useBookingPath("/api/public/config"));
 const busy = ref(false),
   error = ref("");
 async function pay() {
   busy.value = true;
   error.value = "";
   try {
-    const result = await $fetch<any>(
+    const result = await bookingFetch<any>(
       "/api/pay/" + route.params.token + "/checkout",
       { method: "POST", body: {} },
     );

@@ -1,8 +1,9 @@
 <script setup lang="ts">
+const bookingFetch = useBookingRequest();
 definePageMeta({ middleware: "account" });
 const { money, number, when, today, clock, message, paidLabel } =
   useBookingUi();
-const { data, refresh } = await useFetch<any>("/api/admin/overview");
+const { data, refresh } = await useFetch<any>(useBookingPath("/api/admin/overview"));
 const tab = ref("Doctors"),
   error = ref(""),
   notice = ref(""),
@@ -62,7 +63,7 @@ watch([() => booking.serviceId, () => booking.date], async () => {
     return;
   }
   try {
-    slotOptions.value = await $fetch<any[]>("/api/public/slots", {
+    slotOptions.value = await bookingFetch<any[]>("/api/public/slots", {
       query: { serviceId: booking.serviceId, date: booking.date },
     });
   } catch (e) {
@@ -79,7 +80,7 @@ async function perform(
   error.value = "";
   notice.value = "";
   try {
-    const result = await $fetch<any>(path, { method, body });
+    const result = await bookingFetch<any>(path, { method, body });
     notice.value = success;
     await refresh();
     return result;

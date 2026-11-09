@@ -1,12 +1,13 @@
-# Our Village appointment pilot — staging only
+# Our Village appointment pilot
 
-This isolated Nuxt app replaces only the old staging marketing preview at
-`https://staging.our-village.co.za`. The public production website and its event
-calendar remain untouched. Work is on the `staging` branch, not `main`.
+The `staging` branch runs the booking pilot at
+`https://staging.our-village.co.za` and the private live-domain preview at
+`https://www.our-village.co.za/booking/`. The live preview sign-in is at
+`/booking/login`. Booking screens and APIs require a preview account.
 
 ## Included in this pilot
 
-- Patient signup, sign-in, contact consent, appointment holds, rescheduling,
+- Patient signup on staging, sign-in, contact consent, appointment holds, rescheduling,
   cancellation, private invoices and payment links.
 - Doctor first-login password change and a four-step onboarding wizard: profile,
   appointment types/prices/buffers, weekly working periods and publishing.
@@ -24,8 +25,8 @@ calendar remain untouched. Work is on the `staging` branch, not `main`.
 - Yoco hosted checkout integration and raw-body HMAC webhook verification,
   timestamp tolerance, checkout/amount/currency/test-mode checks and event dedupe.
   Without client credentials, checkout is disabled, not silently simulated.
-- Optional admin-only simulations are labelled **NO MONEY RECEIVED**, recorded
-  separately from Yoco test payments and unavailable outside staging mode.
+- Admin payment simulations are labelled **NO MONEY RECEIVED** and recorded
+  separately from Yoco test payments.
 
 ## Safety boundaries and deliberate limitations
 
@@ -102,10 +103,18 @@ new Nginx review user without rotating the existing one and writes initial app
 credentials outside the checkout, with mode 0600. The app's admin and doctor
 passwords must be changed at first login; the Nginx gate is independent.
 
-All browser routes and ordinary API routes remain behind Nginx basic auth.
+On staging, browser routes and ordinary API routes are behind Nginx basic auth.
 **Only** `POST /api/payments/yoco/webhook` is exempt so Yoco can deliver events;
 the application rejects unverified requests. Do not exempt the whole `/api` path.
 Cloudflare source restrictions, strict TLS and no-index/no-cache headers apply.
+
+`compose.preview.yml` reuses the tested booking image in a separate container.
+It reads its own mode-0600 `.env.booking-preview` and uses the
+`ourvillage-booking-preview_booking_data` volume. Seeded preview accounts use
+`BOOKING_ADMIN_*`, `BOOKING_DOCTOR_*` and `BOOKING_PATIENT_*` and a separate
+`BETTER_AUTH_SECRET`. The server requires a session at the booking path and
+issues cookies scoped to `/booking`. This preview uses admin payment simulations.
+`ops/live-preview.nginx.conf` is included only by the production www vhost.
 
 To register the callback once credentials are available, use Yoco's server-side
 webhook registration endpoint with the URL:

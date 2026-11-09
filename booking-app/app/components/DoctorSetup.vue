@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const bookingFetch = useBookingRequest();
 const props = defineProps<{ doctorId?: string }>(),
   { account } = useAccount(),
   { message, money } = useBookingUi();
@@ -6,7 +7,7 @@ const {
   data,
   refresh,
   error: loadError,
-} = await useFetch<any>("/api/manage", { query: { doctorId: props.doctorId } });
+} = await useFetch<any>(useBookingPath("/api/manage"), { query: { doctorId: props.doctorId } });
 const source = data.value?.doctor;
 const step = ref(1),
   error = ref(""),
@@ -64,7 +65,7 @@ async function saveType() {
   busy.value = true;
   error.value = "";
   try {
-    await $fetch("/api/manage/services", {
+    await bookingFetch("/api/manage/services", {
       method: "POST",
       body: {
         ...type,
@@ -88,7 +89,7 @@ async function save(publish = false, next = false) {
   error.value = "";
   saved.value = "";
   try {
-    await $fetch("/api/manage/settings", {
+    await bookingFetch("/api/manage/settings", {
       method: "POST",
       body: {
         ...model,

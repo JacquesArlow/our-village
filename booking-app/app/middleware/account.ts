@@ -1,6 +1,6 @@
 export default defineNuxtRouteMiddleware(async (to) => {
   const { account, refresh } = useAccount();
-  await refresh();
+  if (!useRuntimeConfig().public.bookingLoginRequired) await refresh();
   if (!account.value)
     return navigateTo("/sign-in?next=" + encodeURIComponent(to.fullPath));
   const user = account.value.user;

@@ -3,6 +3,7 @@ import { auth } from "../core/auth";
 import { database } from "../core/database";
 import { fail } from "../core/validation";
 import { one, run, type Actor } from "../core/store";
+import { appPrefix, bookingOrigin } from "../core/runtime";
 
 export async function actor(
   event: H3Event,
@@ -41,8 +42,5 @@ export function throttle(event: H3Event, scope: string, max = 60) {
   run(db, "DELETE FROM rate_limit WHERE window_at<?", now - 3600000);
 }
 export function publicBase() {
-  return (process.env.BETTER_AUTH_URL || "http://localhost:3000").replace(
-    /\/$/,
-    "",
-  );
+  return bookingOrigin + appPrefix;
 }

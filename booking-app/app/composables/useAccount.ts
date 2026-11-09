@@ -1,6 +1,6 @@
 export function useAccount() {
   const account = useState<any>("booking-account", () => null);
-  const request = useRequestFetch();
+  const request = useBookingRequest();
   async function refresh() {
     try {
       account.value = await request("/api/me");

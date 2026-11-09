@@ -1,9 +1,11 @@
 <script setup lang="ts">
+const doctorPhoto = useBookingPath("/natasha.webp");
+const bookingFetch = useBookingRequest();
 const route = useRoute(),
   { account, refresh } = useAccount(),
   { money, clock, today, message } = useBookingUi();
 const { data: doctors, error: directoryError } = await useFetch<any[]>(
-  "/api/public/doctors",
+  useBookingPath("/api/public/doctors"),
 );
 const doctor = computed(() =>
   doctors.value?.find((d) => d.id === route.params.id),
@@ -20,7 +22,7 @@ const {
   data: available,
   refresh: refreshSlots,
   status,
-} = await useFetch<any[]>("/api/public/slots", {
+} = await useFetch<any[]>(useBookingPath("/api/public/slots"), {
   query: { serviceId, date: day },
   immediate: !!serviceId.value,
   watch: [serviceId, day],
@@ -55,7 +57,7 @@ async function book(slot: any) {
       return;
     }
     requestKey.value ||= crypto.randomUUID();
-    const result = await $fetch<any>("/api/appointments", {
+    const result = await bookingFetch<any>("/api/appointments", {
       method: "POST",
       body: {
         serviceId: serviceId.value,
@@ -87,7 +89,7 @@ async function book(slot: any) {
       <aside class="panel">
         <img
           v-if="doctor.id === 'dr-natasha-bartie'"
-          src="/natasha.webp"
+          :src="doctorPhoto"
           :alt="doctor.name"
           class="profile-photo"
         />

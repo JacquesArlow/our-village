@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const bookingFetch = useBookingRequest();
 const props = defineProps<{ records: any[]; staff?: boolean }>(),
   emit = defineEmits<{ changed: [] }>();
 const { when, money, clock, today, message, paidLabel } = useBookingUi();
@@ -15,7 +16,7 @@ async function begin(row: any) {
 async function loadSlots() {
   error.value = "";
   try {
-    options.value = await $fetch<any[]>(
+    options.value = await bookingFetch<any[]>(
       "/api/appointments/" + editing.value.id + "/slots",
       { query: { date: day.value } },
     );
@@ -37,7 +38,7 @@ async function action(row: any, type: string, start?: string) {
   busy.value = true;
   error.value = "";
   try {
-    await $fetch("/api/appointments/" + row.id, {
+    await bookingFetch("/api/appointments/" + row.id, {
       method: "PATCH",
       body: { action: type, start },
     });
