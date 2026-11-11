@@ -13,6 +13,7 @@ export default defineEventHandler((event) => {
     amountCents: invoice.amount_cents,
     currency: invoice.currency,
     state: invoice.state,
+    paymentMode: invoice.payment_mode,
     paymentMethod: invoice.payment_method,
   };
 });

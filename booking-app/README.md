@@ -57,12 +57,10 @@ password-based; MFA and automated reminders are future work.
 2. Share the **test secret key** (`sk_test_…`) using the approved secret vault or
    another secure credential handover, never chat or source control. This hosted
    server-side flow does not require embedding a public key in the frontend.
-3. We register the callback and securely retain its returned `whsec_…` verification
-   secret. Do not delete existing account webhooks to make room without approval.
-4. For a later live launch, the client must get the intended public website domain
-   reviewed by Yoco, supply the resulting live secret through the vault and approve
-   fees, billing identity and refund policies. Live keys are deliberately rejected
-   by this staging app.
+3. Register the appropriate callback below and securely retain its returned
+   `whsec_…` verification secret. Preserve existing account webhooks.
+4. To accept real payments, get the public website domain verified by Yoco and
+   configure the live key and live webhook. The staging host only accepts test keys.
 
 Official references:
 [Yoco setup](https://support.yoco.help/en/articles/739322-yoco-checkout-api),
@@ -118,13 +116,30 @@ test addresses and public sign-ups. Both services validate the same host-only
 session cookie and restrict the workspace by role. The Desk additionally reads
 `.env.booking-desk` for Turnstile. The existing event planner validates the Desk
 session over the internal `ourvillage-desk-auth` network.
-This preview uses admin payment simulations.
+The public-host preview defaults to **Test mode**. Administrators can change it
+under **Village Desk → Admin console → Payment settings**. New invoices inherit
+the active mode. Existing invoices keep their original mode, and checkout can
+only be opened from the app while that mode is active. A Yoco checkout already
+open in a browser can still finish after a switch. Signed callbacks are matched
+to the invoice's mode regardless of the current setting. Both modes share the
+doctor schedules and booking records.
 `ops/live-preview.nginx.conf` is included only by the production www vhost.
 
-To register the callback once credentials are available, use Yoco's server-side
-webhook registration endpoint with the URL:
-`https://staging.our-village.co.za/api/payments/yoco/webhook`.
-Never log the registration response: its verification secret is shown only once.
+Use Yoco's server-side webhook registration endpoint for the appropriate mode.
+Register `payment.succeeded` and retain the response secret securely. Yoco only
+returns it during registration.
+
+| Host and mode | Callback | Runtime variables |
+| --- | --- | --- |
+| Staging test | `https://staging.our-village.co.za/api/payments/yoco/webhook` | `YOCO_SECRET_KEY`, `YOCO_WEBHOOK_SECRET` in `.env` |
+| Public host test | `https://www.our-village.co.za/booking/api/payments/yoco/test/webhook` | `YOCO_TEST_SECRET_KEY`, `YOCO_TEST_WEBHOOK_SECRET` in `.env.booking-preview` |
+| Public host live | `https://www.our-village.co.za/booking/api/payments/yoco/live/webhook` | `YOCO_LIVE_SECRET_KEY`, `YOCO_LIVE_WEBHOOK_SECRET` in `.env.booking-preview` |
+
+Use `sk_test_…` for both test environments and `sk_live_…` for live payments.
+Each callback has its own signing secret. Live mode requires both live values.
+Only the payment callback routes accept unauthenticated payment POSTs and each verifies Yoco's
+signature before processing the event. Recreate both preview containers after
+changing the server environment file.
 
 ## Local verification
 

@@ -1,13 +1,16 @@
+<script setup lang="ts">
+const { data: config } = await useFetch<any>(useBookingPath("/api/public/config"));
+</script>
+
 <template>
   <section class="wrap section prose">
-    <p class="eyebrow">Private staging</p>
+    <p class="eyebrow">Our Village appointments</p>
     <h1>Privacy &amp; safety notice</h1>
-    <h2>Use test information only</h2>
+    <h2>Information you share</h2>
     <p>
-      This is an access-controlled testing environment, not a production patient
-      service. Do not enter identity numbers, clinical notes, diagnoses,
-      medical-aid details, sensitive health information or real payment-card
-      data.
+      Enter only the contact details needed to manage your appointment. Keep
+      identity numbers, clinical notes, diagnoses and medical-aid details out of
+      the booking form. Use test information while payments are in test mode.
     </p>
     <h2>What this pilot stores</h2>
     <p>
@@ -26,10 +29,9 @@
     </p>
     <h2>Payments and invoices</h2>
     <p>
-      Only Yoco test credentials can be configured. Administrator simulations
-      are labelled and do not charge or receive money. Invoice documents are
-      test documents, not production tax invoices or medical-aid claims. A
-      returned checkout page is not proof of payment.
+      {{ config?.mode === "live" ? "New invoices use live Yoco checkout and can charge real money." : "Test invoices and administrator simulations use no real money." }}
+      Enter card details on Yoco’s hosted checkout. Our Village confirms
+      payment after verifying Yoco’s notification.
     </p>
     <h2>Before a public launch</h2>
     <p>

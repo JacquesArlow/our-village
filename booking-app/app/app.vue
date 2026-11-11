@@ -77,7 +77,7 @@ async function logout() {
     <main id="main"><NuxtPage v-if="showWorkspace || loginPage" /></main>
     <footer v-if="showWorkspace" class="site-footer">
       <span>Our Village · Pretoria</span
-      ><NuxtLink to="/privacy">Staging privacy &amp; safety notice</NuxtLink
+      ><NuxtLink to="/privacy">Privacy &amp; safety notice</NuxtLink
       ><span>All times are South African time (SAST).</span>
     </footer>
   </div>

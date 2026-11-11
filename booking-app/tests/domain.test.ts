@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { createHmac } from "node:crypto";
 import {
   openDatabase,
@@ -29,7 +29,8 @@ import {
   candidateSlots,
   localDay,
 } from "../server/core/schedule";
-import { verifyWebhook, handlePaymentEvent } from "../server/core/payments";
+import { verifyWebhook, handlePaymentEvent, startCheckout } from "../server/core/payments";
+import { paymentMode } from "../server/core/payment-mode";
 import { instant } from "../server/core/validation";
 import { accountDirectory } from "../server/core/accounts";
 
@@ -497,6 +498,73 @@ describe("payment links and verification", () => {
       ).payment_method,
     ).toBe("yoco_test");
     expect(one(db, "SELECT count(*) n FROM payment_event").n).toBe(1);
+  });
+  it("migrates existing invoices to test mode and preserves an explicit mode on restart", () => {
+    const invoice = makeInvoice(db, patient.id, null, "Existing invoice", 200);
+    db.exec("ALTER TABLE invoice DROP COLUMN payment_mode; DROP TABLE payment_setting;");
+    migrateDomain(db);
+    expect(paymentMode(db)).toBe("test");
+    expect(one(db, "SELECT payment_mode FROM invoice WHERE id=?", invoice.id).payment_mode).toBe("test");
+    run(db, "UPDATE payment_setting SET mode='live' WHERE id=1");
+    migrateDomain(db);
+    expect(paymentMode(db)).toBe("live");
+    expect(makeInvoice(db, patient.id, null, "Live invoice", 200).payment_mode).toBe("live");
+  });
+  it("keeps signed live settlements tied to their invoice when the setting returns to test", () => {
+    const testInvoice = makeInvoice(db, patient.id, null, "Test invoice", 200);
+    run(db, "UPDATE payment_setting SET mode='live' WHERE id=1");
+    const liveInvoice = makeInvoice(db, patient.id, null, "Live invoice", 200);
+    run(db, "UPDATE invoice SET checkout_id='test_checkout' WHERE id=?", testInvoice.id);
+    run(db, "UPDATE invoice SET checkout_id='live_checkout' WHERE id=?", liveInvoice.id);
+    run(db, "UPDATE payment_setting SET mode='test' WHERE id=1");
+    const event = {
+      id: "live_event",
+      type: "payment.succeeded",
+      payload: {
+        id: "live_payment",
+        mode: "live",
+        status: "succeeded",
+        currency: "ZAR",
+        amount: 200,
+        metadata: { checkoutId: "live_checkout" },
+      },
+    };
+    expect(() => handlePaymentEvent(db, event, now, "test")).toThrow();
+    expect(() => handlePaymentEvent(db, {
+      ...event,
+      payload: { ...event.payload, metadata: { checkoutId: "test_checkout" } },
+    }, now, "live")).toThrow();
+    expect(() => settleInvoice(db, liveInvoice.id, "simulation", "staging_simulation", now)).toThrow();
+    expect(handlePaymentEvent(db, event, now, "live").processed).toBe(true);
+    expect(one(db, "SELECT state,payment_method FROM invoice WHERE id=?", liveInvoice.id)).toMatchObject({
+      state: "paid", payment_method: "yoco_live",
+    });
+    expect(one(db, "SELECT state FROM invoice WHERE id=?", testInvoice.id).state).toBe("unpaid");
+  });
+  it("prevents a mode switch from returning an in-flight checkout from the previous mode", async () => {
+    const invoice = makeInvoice(db, patient.id, null, "Test invoice", 200);
+    vi.stubEnv("YOCO_SECRET_KEY", "sk_test_fixture");
+    vi.stubEnv("YOCO_WEBHOOK_SECRET", secret);
+    const fetch = vi.fn(async () => {
+      run(db, "UPDATE payment_setting SET mode='live' WHERE id=1");
+      return Response.json({
+        id: "test_checkout",
+        processingMode: "test",
+        amount: 200,
+        currency: "ZAR",
+        redirectUrl: "https://c.yoco.com/checkout/test_checkout",
+      });
+    });
+    vi.stubGlobal("fetch", fetch);
+    try {
+      await expect(startCheckout(db, invoice.id, "https://staging.example.test")).rejects.toMatchObject({ statusCode: 409 });
+      expect(one(db, "SELECT checkout_id FROM invoice WHERE id=?", invoice.id).checkout_id).toBe("test_checkout");
+      await expect(startCheckout(db, invoice.id, "https://staging.example.test")).rejects.toMatchObject({ statusCode: 409 });
+      expect(fetch).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+      vi.unstubAllEnvs();
+    }
   });
   it("records late payments for review without stealing a newly reserved slot", () => {
     const first = book();

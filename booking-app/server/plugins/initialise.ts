@@ -36,7 +36,7 @@ export default defineNitroPlugin(async () => {
       process.env.YOCO_WEBHOOK_SECRET)
   )
     throw new Error(
-      "The live preview requires the correct workspace, account access and simulated payments.",
+      "Village Desk and the booking preview require the correct workspace, account access and separate payment credentials.",
     );
   if (staffDesk) {
     if (

@@ -38,10 +38,12 @@ export default defineEventHandler(async (event) => {
     "Content-Security-Policy": `default-src 'self'; script-src 'self' 'unsafe-inline'${turnstile}; frame-src 'self'${turnstile}; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
   });
   const read = ["GET", "HEAD"].includes(event.method);
-  if (path === "/api/payments/yoco/webhook") {
-    if (livePreview)
-      fail(404, "The payment gateway is unavailable in this preview.");
-    if (event.method === "POST") return;
+  if (/^\/api\/payments\/yoco\/(?:(?:test|live)\/)?webhook$/.test(path)) {
+    const enabled = livePreview
+      ? !staffDesk && path !== "/api/payments/yoco/webhook"
+      : path === "/api/payments/yoco/webhook";
+    if (!enabled || event.method !== "POST") fail(404, "Webhook not found.");
+    return;
   }
   if (!read) {
     if (getHeader(event, "origin") !== bookingOrigin)

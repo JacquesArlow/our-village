@@ -2,6 +2,12 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 import { transaction } from "./database";
 import { one, run, assertPayable, settleInvoice, audit } from "./store";
+import {
+  requirePaymentMode,
+  yocoCheckoutKey,
+  yocoSigningKey,
+  type PaymentMode,
+} from "./payment-mode";
 import { fail } from "./validation";
 
 export function verifyWebhook(
@@ -10,7 +16,8 @@ export function verifyWebhook(
   secret: string,
   now = Date.now(),
 ) {
-  if (!secret.startsWith("whsec_"))
+  const key = yocoSigningKey(secret);
+  if (!key)
     fail(503, "Yoco webhook verification is not configured.");
   const id = headers["webhook-id"],
     timestamp = headers["webhook-timestamp"],
@@ -25,9 +32,6 @@ export function verifyWebhook(
     signature.length > 2000
   )
     fail(401, "Invalid payment notification signature.");
-  const key = Buffer.from(secret.slice(6), "base64");
-  if (key.length < 16)
-    fail(503, "Yoco webhook verification is not configured.");
   const expected = createHmac("sha256", key)
     .update(id + "." + timestamp + "." + raw)
     .digest();
@@ -43,24 +47,27 @@ export function handlePaymentEvent(
   db: DatabaseSync,
   event: any,
   now = Date.now(),
+  mode: PaymentMode = "test",
 ) {
   if (typeof event?.id !== "string" || event.id.length > 200)
     fail(400, "Invalid payment event.");
   if (event.type !== "payment.succeeded")
     return { accepted: true, processed: false };
   const payment = event.payload;
+  if (payment?.mode !== mode)
+    fail(400, "Payment notification does not match the expected checkout mode.");
+  if (typeof payment.metadata?.checkoutId !== "string")
+    return { accepted: true, processed: false };
   if (
-    payment?.mode !== "test" ||
     payment.status !== "succeeded" ||
     payment.currency !== "ZAR" ||
     !Number.isSafeInteger(payment.amount) ||
     typeof payment.id !== "string" ||
-    payment.id.length > 200 ||
-    typeof payment.metadata?.checkoutId !== "string"
+    payment.id.length > 200
   )
     fail(
       400,
-      "Payment notification does not match the staging payment contract.",
+      "Payment notification does not match the expected format.",
     );
   return transaction(db, () => {
     if (one(db, "SELECT id FROM payment_event WHERE id=?", event.id))
@@ -70,11 +77,10 @@ export function handlePaymentEvent(
       "SELECT * FROM invoice WHERE checkout_id=?",
       payment.metadata.checkoutId,
     );
-    if (!invoice)
-      fail(
-        409,
-        "Checkout is not yet recorded. Please retry notification delivery.",
-      );
+    // Yoco also sends account events for checkouts created by other integrations.
+    if (!invoice) return { accepted: true, processed: false };
+    if (invoice.payment_mode !== mode)
+      fail(409, "Payment mode does not match the invoice.");
     if (invoice.amount_cents !== payment.amount)
       fail(409, "Payment amount does not match the invoice.");
     const existing = one(
@@ -84,7 +90,7 @@ export function handlePaymentEvent(
     );
     if (existing && existing.id !== invoice.id)
       fail(409, "Payment was already allocated to another invoice.");
-    settleInvoice(db, invoice.id, payment.id, "yoco_test", now);
+    settleInvoice(db, invoice.id, payment.id, mode === "live" ? "yoco_live" : "yoco_test", now);
     run(
       db,
       "INSERT INTO payment_event(id,checkout_id,received_at) VALUES(?,?,?)",
@@ -100,17 +106,12 @@ export async function startCheckout(
   invoiceId: string,
   base: string,
 ) {
-  const key = process.env.YOCO_SECRET_KEY;
-  if (
-    !key?.startsWith("sk_test_") ||
-    !process.env.YOCO_WEBHOOK_SECRET?.startsWith("whsec_")
-  )
-    fail(
-      503,
-      "Yoco test payments are not connected yet. Ask the practice administrator to configure the test key and webhook.",
-    );
   const invoice = one(db, "SELECT * FROM invoice WHERE id=?", invoiceId);
   if (!invoice) fail(404, "Invoice not found.");
+  const mode: PaymentMode = invoice.payment_mode;
+  requirePaymentMode(db, mode);
+  const key = yocoCheckoutKey(mode);
+  if (!key) fail(503, `Yoco ${mode} payments are not configured.`);
   assertPayable(db, invoice);
   if (invoice.checkout_id && invoice.checkout_url)
     return { redirectUrl: invoice.checkout_url };
@@ -122,7 +123,7 @@ export async function startCheckout(
       headers: {
         Authorization: "Bearer " + key,
         "Content-Type": "application/json",
-        "Idempotency-Key": "ov-staging-" + invoice.id,
+        "Idempotency-Key": (mode === "live" ? "ov-live-" : "ov-staging-") + invoice.id,
       },
       body: JSON.stringify({
         amount: invoice.amount_cents,
@@ -131,7 +132,7 @@ export async function startCheckout(
         successUrl: base + "/payment-return?outcome=submitted",
         cancelUrl: base + "/payment-return?outcome=cancelled",
         failureUrl: base + "/payment-return?outcome=failed",
-        metadata: { invoiceId: invoice.id, environment: "our-village-staging" },
+        metadata: { invoiceId: invoice.id, paymentMode: mode },
       }),
     });
   } catch {
@@ -153,7 +154,7 @@ export async function startCheckout(
     fail(502, "Yoco returned an invalid checkout link.");
   }
   if (
-    checkout.processingMode !== "test" ||
+    checkout.processingMode !== mode ||
     checkout.amount !== invoice.amount_cents ||
     checkout.currency !== "ZAR" ||
     typeof checkout.id !== "string" ||
@@ -168,13 +169,18 @@ export async function startCheckout(
       502,
       "Yoco returned an unexpected checkout. No payment was confirmed.",
     );
-  run(
-    db,
-    "UPDATE invoice SET checkout_id=?,checkout_url=? WHERE id=? AND checkout_id IS NULL",
-    checkout.id,
-    redirect.toString(),
-    invoice.id,
-  );
-  audit(db, null, "checkout.created", invoice.id, "yoco_test");
-  return { redirectUrl: redirect.toString() };
+  const saved = transaction(db, () => {
+    const updated = run(
+      db,
+      "UPDATE invoice SET checkout_id=?,checkout_url=? WHERE id=? AND checkout_id IS NULL",
+      checkout.id,
+      redirect.toString(),
+      invoice.id,
+    );
+    if (updated.changes) audit(db, null, "checkout.created", invoice.id, `yoco_${mode}`);
+    return one(db, "SELECT * FROM invoice WHERE id=?", invoice.id);
+  });
+  requirePaymentMode(db, mode);
+  assertPayable(db, saved);
+  return { redirectUrl: saved.checkout_url };
 }

@@ -7,6 +7,7 @@ const route = useRoute(),
 const { data: doctors, error: directoryError } = await useFetch<any[]>(
   useBookingPath("/api/public/doctors"),
 );
+const { data: config, refresh: refreshConfig } = await useFetch<any>(useBookingPath("/api/public/config"));
 const doctor = computed(() =>
   doctors.value?.find((d) => d.id === route.params.id),
 );
@@ -63,12 +64,13 @@ async function book(slot: any) {
         serviceId: serviceId.value,
         start: slot.start,
         requestKey: requestKey.value,
+        paymentMode: config.value?.mode,
       },
     });
     await navigateTo("/invoices/" + result.invoice.id);
   } catch (e) {
     error.value = message(e);
-    await refreshSlots();
+    await Promise.all([refreshSlots(), refreshConfig()]);
   } finally {
     busy.value = false;
   }
@@ -95,8 +97,8 @@ async function book(slot: any) {
         />
         <p>{{ doctor.description }}</p>
         <p class="notice">
-          All appointment times are SAST (UTC+02:00). This is a staging preview:
-          use test patient information only.
+          All appointment times are SAST (UTC+02:00).
+          <template v-if="config?.mode === 'test'">Payments are in test mode.</template>
         </p>
       </aside>
       <div class="panel">
@@ -139,8 +141,7 @@ async function book(slot: any) {
           </div>
           <p class="hint">
             Choosing a slot reserves it for 15 minutes. It is confirmed only
-            after a verified test payment or an explicitly labelled
-            administrator simulation.
+            after payment is verified.
           </p></template
         >
       </div>

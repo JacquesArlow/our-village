@@ -55,6 +55,7 @@ export function migrateDomain(db: DatabaseSync) {
       patient_name TEXT NOT NULL, patient_email TEXT NOT NULL, doctor_name TEXT NOT NULL DEFAULT '',
       issuer_json TEXT NOT NULL, vat_cents INTEGER NOT NULL DEFAULT 0,
       state TEXT NOT NULL DEFAULT 'unpaid' CHECK(state IN('unpaid','paid','void','refund_review')),
+      payment_mode TEXT NOT NULL DEFAULT 'test' CHECK(payment_mode IN('test','live')),
       checkout_id TEXT UNIQUE, checkout_url TEXT, payment_id TEXT UNIQUE, payment_method TEXT,
       created_at INTEGER NOT NULL, paid_at INTEGER
     );
@@ -69,8 +70,15 @@ export function migrateDomain(db: DatabaseSync) {
     );
     CREATE TABLE IF NOT EXISTS practice_setting (id INTEGER PRIMARY KEY CHECK(id=1), value TEXT NOT NULL);
     INSERT OR IGNORE INTO practice_setting(id,value) VALUES(1,'{"name":"Our Village","address":"525 Alsation Drive, Garsfontein, Pretoria","registrationNumber":"","vatNumber":"","taxMode":"not_configured"}');
+    CREATE TABLE IF NOT EXISTS payment_setting (id INTEGER PRIMARY KEY CHECK(id=1), mode TEXT NOT NULL CHECK(mode IN('test','live')));
+    INSERT OR IGNORE INTO payment_setting(id,mode) VALUES(1,'test');
     CREATE TABLE IF NOT EXISTS rate_limit (key TEXT PRIMARY KEY, window_at INTEGER NOT NULL, count INTEGER NOT NULL);
   `);
+  transaction(db, () => {
+    const columns = db.prepare("PRAGMA table_info(invoice)").all();
+    if (!columns.some((column) => column.name === "payment_mode"))
+      db.exec("ALTER TABLE invoice ADD COLUMN payment_mode TEXT NOT NULL DEFAULT 'test' CHECK(payment_mode IN('test','live'))");
+  });
 }
 
 export function transaction<T>(db: DatabaseSync, action: () => T): T {

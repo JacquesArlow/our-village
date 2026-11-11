@@ -5,6 +5,7 @@ const { account, refresh: refreshAccount } = useAccount(),
   { money, when, number, message, paidLabel } = useBookingUi(),
   route = useRoute();
 const { data, refresh } = await useFetch<any>(useBookingPath("/api/patient/dashboard"));
+const { data: config } = await useFetch<any>(useBookingPath("/api/public/config"));
 const form = reactive({
     phone: account.value?.patient?.phone || "",
     consent: false,
@@ -38,9 +39,8 @@ async function save() {
       </div>
       <NuxtLink to="/" class="button">Book an appointment</NuxtLink>
     </div>
-    <p class="notice">
-      Private staging: use test details only. No emails are sent and no real
-      payments are enabled.
+    <p v-if="config?.mode === 'test'" class="notice">
+      Payments are in test mode. No money will be charged for test invoices.
     </p>
     <div class="dashboard-grid">
       <div>
@@ -57,7 +57,7 @@ async function save() {
             :to="'/invoices/' + invoice.id"
             class="list-row"
             ><span
-              ><strong>{{ number(invoice.seq) }}</strong
+              ><strong>{{ number(invoice.seq, invoice.payment_mode) }}</strong
               ><small
                 >{{ invoice.description }} ·
                 {{ when(invoice.created_at) }}</small
@@ -78,7 +78,7 @@ async function save() {
         <form class="panel form-panel" @submit.prevent="save">
           <h2>Contact details</h2>
           <p class="hint">
-            Save a contact number before making your first test booking. Do not
+            Save a contact number before making your first booking. Do not
             enter clinical notes or identity numbers.
           </p>
           <label
@@ -91,8 +91,7 @@ async function save() {
           ><label class="check"
             ><input v-model="form.consent" type="checkbox" required /><span
               >I agree to the
-              <NuxtLink to="/privacy">staging data notice</NuxtLink> and will
-              use test details.</span
+              <NuxtLink to="/privacy">privacy notice</NuxtLink>.</span
             ></label
           >
           <p v-if="error" class="notice error" role="alert">{{ error }}</p>

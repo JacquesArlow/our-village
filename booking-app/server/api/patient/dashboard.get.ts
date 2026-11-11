@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     ),
     invoices: many(
       db,
-      "SELECT id,seq,description,amount_cents,currency,state,created_at,paid_at,payment_method FROM invoice WHERE patient_id=? ORDER BY seq DESC LIMIT 200",
+      "SELECT id,seq,description,amount_cents,currency,state,created_at,paid_at,payment_method,payment_mode FROM invoice WHERE patient_id=? ORDER BY seq DESC LIMIT 200",
       user.id,
     ),
   };

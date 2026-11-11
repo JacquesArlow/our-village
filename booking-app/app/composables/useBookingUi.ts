@@ -30,13 +30,16 @@ export function useBookingUi() {
     error?.data?.message ||
     error?.message ||
     "Something went wrong. Please try again.";
-  const number = (seq: number) => "OV-STG-" + String(seq).padStart(6, "0");
+  const number = (seq: number, mode?: string) =>
+    (mode === "live" ? "OV-" : "OV-STG-") + String(seq).padStart(6, "0");
   const paidLabel = (method?: string) =>
     method === "staging_simulation"
       ? "Simulated — no money received"
       : method === "yoco_test"
         ? "Yoco test payment — no real money"
-        : "";
+        : method === "yoco_live"
+          ? "Paid via Yoco"
+          : "";
   return {
     money,
     when,

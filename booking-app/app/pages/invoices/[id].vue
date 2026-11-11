@@ -13,6 +13,8 @@ const {
 const { data: config } = await useFetch<any>(
   useBookingPath("/api/public/config"),
 );
+const liveInvoice = computed(() => data.value?.invoice.payment_mode === "live");
+const activeMode = computed(() => config.value?.mode === data.value?.invoice.payment_mode);
 const error = ref(""),
   link = ref(""),
   busy = ref(false);
@@ -46,7 +48,7 @@ async function generateLink() {
 async function simulate() {
   if (
     !window.confirm(
-      "Simulate a successful staging payment? NO MONEY will be charged or received. This is not a Yoco transaction.",
+      "Simulate a successful test payment? No money will be charged.",
     )
   )
     return;
@@ -82,7 +84,7 @@ const copy = async () => {
       ><div class="section-heading no-print">
         <div>
           <p class="eyebrow">Your invoice</p>
-          <h1>{{ number(data.invoice.seq) }}</h1>
+          <h1>{{ number(data.invoice.seq, data.invoice.payment_mode) }}</h1>
         </div>
         <button class="button secondary" @click="printable">
           Print / Save PDF
@@ -102,8 +104,8 @@ const copy = async () => {
             </p>
           </div>
           <div>
-            <span class="badge">STAGING — NOT A TAX INVOICE</span>
-            <h3>{{ number(data.invoice.seq) }}</h3>
+            <span v-if="!liveInvoice" class="badge">TEST INVOICE</span>
+            <h3>{{ number(data.invoice.seq, data.invoice.payment_mode) }}</h3>
             <p>Created {{ when(data.invoice.created_at) }}</p>
             <strong>{{ data.invoice.state.replaceAll("_", " ") }}</strong>
           </div>
@@ -124,7 +126,7 @@ const copy = async () => {
           ><strong>{{ money(data.invoice.amount_cents) }}</strong>
         </div>
         <div v-if="data.invoice.vat_cents" class="invoice-line">
-          <span>Included VAT (as configured for this test invoice)</span
+          <span>Included VAT</span
           ><span>{{ money(data.invoice.vat_cents) }}</span>
         </div>
         <div class="invoice-line total">
@@ -145,32 +147,34 @@ const copy = async () => {
           This slot is held until {{ when(data.appointment.hold_until) }}.
           Payment must be verified before the slot can be confirmed.
         </p>
-        <p class="hint">
-          This document is for testing only. It is not a medical-aid claim, a
-          clinical record or a production tax invoice. Practice billing details
-          must be verified before real invoicing.
+        <p v-if="!liveInvoice" class="hint">
+          This invoice is for testing only. No money will be charged.
         </p>
       </article>
       <div class="panel spaced no-print">
         <p v-if="error" class="notice error" role="alert">{{ error }}</p>
         <template v-if="data.invoice.state === 'unpaid'"
-          ><p v-if="!config?.yocoConnected" class="notice">
-            Yoco test payments are not connected yet. No card details are
-            collected by this app.
+          ><p v-if="!activeMode" class="notice">
+            This {{ liveInvoice ? "live" : "test" }} invoice is outside the active payment mode.
+          </p>
+          <p v-else-if="!config?.yocoConnected" class="notice">
+            Yoco {{ liveInvoice ? "live" : "test" }} checkout is unavailable.
           </p>
           <div class="actions">
             <button
               class="button"
-              :disabled="busy || !config?.yocoConnected"
+              :disabled="busy || !activeMode || !config?.yocoConnected"
               @click="checkout"
             >
-              Continue to Yoco test checkout</button
-            ><button class="button secondary" @click="generateLink">
+              {{ liveInvoice ? "Pay with Yoco" : "Continue to Yoco test checkout" }}</button
+            ><button class="button secondary" :disabled="!activeMode" @click="generateLink">
               Generate shareable payment link</button
             ><button
               v-if="
                 account.user.role === 'admin' &&
-                config?.simulatedPaymentsEnabled
+                activeMode &&
+                config?.simulatedPaymentsEnabled &&
+                !data.invoice.checkout_id
               "
               class="button ghost"
               :disabled="busy"
@@ -196,8 +200,7 @@ const copy = async () => {
           </div>
           <p class="hint">
             Appointment links expire with the 15-minute slot hold. Standalone
-            invoice links expire after 48 hours. Staging still requires the
-            Nginx review password.
+            invoice links expire after 48 hours.
           </p>
         </div>
       </div></template

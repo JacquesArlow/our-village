@@ -9,18 +9,17 @@ import {
   audit,
 } from "../../../core/store";
 import { fail } from "../../../core/validation";
-import { livePreview } from "../../../core/runtime";
+import { paymentOptions } from "../../../core/payment-mode";
 export default defineEventHandler(async (event) => {
   const user = await actor(event),
     db = database();
   requireRole(user, ["admin"]);
-  if (
-    (process.env.APP_MODE !== "staging" && !livePreview) ||
-    process.env.ENABLE_STAGING_SIMULATIONS !== "true"
-  )
-    fail(403, "Staging simulations are disabled.");
   return transaction(db, () => {
+    if (!paymentOptions(db).simulatedPaymentsEnabled)
+      fail(403, "Payment simulations are available only in test mode.");
     const invoice = invoiceFor(db, user, getRouterParam(event, "id")!);
+    if (invoice.payment_mode !== "test" || invoice.checkout_id)
+      fail(409, "Only test invoices without an open Yoco checkout can be simulated.");
     assertPayable(db, invoice);
     const result = settleInvoice(
       db,

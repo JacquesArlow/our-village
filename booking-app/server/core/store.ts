@@ -3,6 +3,7 @@ import type { DatabaseSync, SQLInputValue } from "node:sqlite";
 import { transaction } from "./database";
 import { fail, text, integer, instant, flag } from "./validation";
 import { candidateSlots, localDay, normaliseHours } from "./schedule";
+import { paymentMode, requirePaymentMode } from "./payment-mode";
 import type { AccountRole } from "../../shared/accounts";
 
 export interface Actor {
@@ -252,7 +253,7 @@ export function makeInvoice(
     : null;
   run(
     db,
-    "INSERT INTO invoice(id,patient_id,doctor_id,appointment_id,description,amount_cents,created_at,patient_name,patient_email,doctor_name,issuer_json,vat_cents) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+    "INSERT INTO invoice(id,patient_id,doctor_id,appointment_id,description,amount_cents,created_at,patient_name,patient_email,doctor_name,issuer_json,vat_cents,payment_mode) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
     id,
     patientId,
     doctorId,
@@ -265,6 +266,7 @@ export function makeInvoice(
     doctor?.name || "",
     JSON.stringify(issuer),
     vat,
+    paymentMode(db),
   );
   return one(db, "SELECT * FROM invoice WHERE id=?", id);
 }
@@ -310,6 +312,7 @@ export function createAppointment(
         ),
       };
     }
+    requirePaymentMode(db, input.paymentMode ?? "test");
     if (
       !one(db, "SELECT user_id FROM patient_profile WHERE user_id=?", patientId)
     )
@@ -556,6 +559,7 @@ export function createPaymentLink(
   now = Date.now(),
 ) {
   const invoice = invoiceFor(db, actor, invoiceId);
+  requirePaymentMode(db, invoice.payment_mode);
   assertPayable(db, invoice, now);
   const token = randomBytes(32).toString("base64url");
   const expires = invoice.appointment_id
@@ -596,11 +600,13 @@ export function settleInvoice(
   db: DatabaseSync,
   invoiceId: string,
   paymentId: string,
-  method: "yoco_test" | "staging_simulation",
+  method: "yoco_test" | "yoco_live" | "staging_simulation",
   now = Date.now(),
 ) {
   const invoice = one(db, "SELECT * FROM invoice WHERE id=?", invoiceId);
   if (!invoice) fail(404, "Invoice not found.");
+  if (invoice.payment_mode !== (method === "yoco_live" ? "live" : "test"))
+    fail(409, "This payment does not match the invoice mode.");
   if (invoice.payment_id) {
     if (invoice.payment_id !== paymentId)
       fail(

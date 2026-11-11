@@ -54,7 +54,7 @@ function availableEmail(db: DatabaseSync, address: string, id = "") {
     fail(409, "That email is already assigned to an account.");
 }
 
-function requireCurrentAdmin(db: DatabaseSync, admin: Actor) {
+export function requireCurrentAdmin(db: DatabaseSync, admin: Actor) {
   requireRole(admin, ["admin"]);
   if (
     !one(

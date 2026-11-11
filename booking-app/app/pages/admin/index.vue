@@ -93,7 +93,7 @@ async function perform(
 async function invoice() {
   const result = await perform(
     "/api/admin/invoices",
-    { ...billing, amountCents: Math.round(Number(billing.price) * 100) },
+    { ...billing, paymentMode: data.value?.paymentMode, amountCents: Math.round(Number(billing.price) * 100) },
     "Invoice created.",
   );
   if (result) await navigateTo("/invoices/" + result.id);
@@ -101,7 +101,7 @@ async function invoice() {
 async function makeBooking() {
   const result = await perform(
     "/api/appointments",
-    { ...booking, requestKey: crypto.randomUUID() },
+    { ...booking, paymentMode: data.value?.paymentMode, requestKey: crypto.randomUUID() },
     "Appointment reserved for 15 minutes.",
   );
   if (result) await navigateTo("/invoices/" + result.invoice.id);
@@ -114,7 +114,10 @@ async function makeBooking() {
         <p class="eyebrow">Practice administration</p>
         <h1>A connected view of your village</h1>
       </div>
-      <NuxtLink v-if="!staff" to="/" class="button secondary"
+      <NuxtLink v-if="staff" to="/admin/settings" class="button secondary"
+        >Payment settings</NuxtLink
+      >
+      <NuxtLink v-else to="/" class="button secondary"
         >Booking view</NuxtLink
       >
     </div>
@@ -210,6 +213,7 @@ async function makeBooking() {
           The patient must first register and save their contact profile. A slot
           is reserved for 15 minutes until payment is confirmed.
         </p>
+        <p v-if="data?.paymentMode === 'test'" class="hint">This booking will use a test invoice.</p>
         <label
           >Patient<select v-model="booking.patientId" required>
             <option value="">Choose patient</option>
@@ -288,7 +292,7 @@ async function makeBooking() {
           :to="'/invoices/' + i.id"
           class="list-row"
           ><span
-            ><strong>{{ number(i.seq) }}</strong
+            ><strong>{{ number(i.seq, i.payment_mode) }}</strong
             ><small
               >{{ i.patient_name }} ·
               {{ i.doctor_name || "Practice invoice" }}</small
@@ -331,7 +335,9 @@ async function makeBooking() {
             max="100000"
             step="0.01"
             required /></label
-        ><button class="button" :disabled="busy">Create staging invoice</button>
+        ><button class="button" :disabled="busy">
+          {{ data?.paymentMode === "live" ? "Create live invoice" : "Create test invoice" }}
+        </button>
       </form>
     </div>
     <form
@@ -350,9 +356,7 @@ async function makeBooking() {
     >
       <h2>Practice billing details</h2>
       <p class="notice">
-        These are test invoice settings, not legal or tax advice. Invoices
-        remain watermarked as staging documents. Verify all details with the
-        practice before a public launch.
+        These details appear on new invoices. Verify the practice’s billing and tax details before accepting live payments.
       </p>
       <label
         >Business / legal name<input

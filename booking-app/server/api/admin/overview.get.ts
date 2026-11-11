@@ -1,5 +1,6 @@
 import { actor } from "../../utils/access";
 import { database } from "../../core/database";
+import { paymentMode } from "../../core/payment-mode";
 import { many, one, requireRole, expireHolds } from "../../core/store";
 export default defineEventHandler(async (event) => {
   const user = await actor(event),
@@ -7,6 +8,7 @@ export default defineEventHandler(async (event) => {
   requireRole(user, ["admin"]);
   expireHolds(db);
   return {
+    paymentMode: paymentMode(db),
     doctors: many(
       db,
       "SELECT d.*,u.email,u.disabledAt FROM doctor d JOIN user u ON u.id=d.user_id ORDER BY d.created_at",
