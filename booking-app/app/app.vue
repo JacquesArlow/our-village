@@ -17,18 +17,11 @@ const showDoctorDirectory = computed(
     showWorkspace.value &&
     account.value?.user.role !== "receptionist",
 );
-const { data: config, refresh: refreshConfig } = await useFetch<any>(
-  useBookingPath("/api/public/config"),
-  { immediate: showWorkspace.value },
-);
 const { data: doctors, refresh: refreshDoctors } = await useFetch<any[]>(
   useBookingPath("/api/public/doctors"),
   { key: "public-doctors", immediate: showDoctorDirectory.value },
 );
 useHead({ link: [{ rel: "icon", href: useBookingPath("/favicon.ico") }] });
-watch(showWorkspace, async (show) => {
-  if (show) await refreshConfig();
-});
 watch(showDoctorDirectory, async (show) => {
   if (show) await refreshDoctors();
 });
@@ -45,11 +38,6 @@ async function logout() {
 </script>
 <template>
   <div>
-    <div v-if="showWorkspace" class="pilot-banner">
-      {{ loginRequired ? "Private booking preview" : "Private staging" }} · Test
-      data only · No emails sent ·
-      {{ config?.yocoConnected ? "Yoco test mode" : "Yoco not connected" }}
-    </div>
     <header v-if="showWorkspace" class="site-header">
       <NuxtLink
         :to="account?.user.role === 'receptionist' ? '/reception' : '/'"

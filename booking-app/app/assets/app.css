@@ -148,15 +148,6 @@ small {
   margin-bottom: 24px;
   text-decoration: none;
 }
-.pilot-banner {
-  background: var(--forest);
-  color: #edf2e6;
-  text-align: center;
-  padding: 10px 20px;
-  font-size: 0.74rem;
-  line-height: 1.5;
-  letter-spacing: 0.025em;
-}
 .site-header {
   display: flex;
   justify-content: space-between;
@@ -1013,7 +1004,6 @@ input[readonly] {
   }
 }
 @media print {
-  .pilot-banner,
   .site-header,
   .site-footer,
   .no-print {
