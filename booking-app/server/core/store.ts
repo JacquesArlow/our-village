@@ -5,6 +5,7 @@ import { fail, text, integer, instant, flag } from "./validation";
 import { candidateSlots, localDay, normaliseHours } from "./schedule";
 import { paymentMode, requirePaymentMode } from "./payment-mode";
 import type { AccountRole } from "../../shared/accounts";
+import { addCalendarDays, bookingIntervals, type AvailabilityWeek } from "../../shared/calendar";
 
 export interface Actor {
   id: string;
@@ -27,6 +28,7 @@ export const run = (db: DatabaseSync, sql: string, ...args: SQLInputValue[]) =>
   db.prepare(sql).run(...args);
 export const hashToken = (token: string) =>
   createHash("sha256").update(token).digest("hex");
+const occupiesTime = "(status IN('confirmed','completed','no_show') OR (status='hold' AND hold_until>?))";
 export function audit(
   db: DatabaseSync,
   actor: string | null,
@@ -87,6 +89,20 @@ export function publishedDoctors(db: DatabaseSync) {
     ),
   }));
 }
+function bookableCalendar(db: DatabaseSync, serviceId: string) {
+  const service = one(
+    db,
+    "SELECT * FROM service WHERE id=? AND active=1",
+    serviceId,
+  );
+  if (!service) return null;
+  const doctor = one(
+    db,
+    "SELECT d.* FROM doctor d JOIN user u ON u.id=d.user_id WHERE d.id=? AND d.active=1 AND d.onboarded=1 AND u.disabledAt IS NULL",
+    service.doctor_id,
+  );
+  return doctor ? { doctor, service } : null;
+}
 export function slots(
   db: DatabaseSync,
   serviceId: string,
@@ -94,22 +110,62 @@ export function slots(
   now = Date.now(),
   excluding?: string,
 ) {
-  const service = one(
-    db,
-    "SELECT * FROM service WHERE id=? AND active=1",
-    serviceId,
-  );
-  if (!service) return [];
-  const doctor = one(
-    db,
-    "SELECT d.* FROM doctor d JOIN user u ON u.id=d.user_id WHERE d.id=? AND d.active=1 AND d.onboarded=1 AND u.disabledAt IS NULL",
-    service.doctor_id,
-  );
-  if (!doctor) return [];
+  const calendar = bookableCalendar(db, serviceId);
+  if (!calendar) return [];
+  const { doctor, service } = calendar;
   return candidateSlots(doctor, service, day, now).filter(
     (slot) =>
       !conflict(db, doctor.id, slot.start, slot.busyUntil, now, excluding),
   );
+}
+export function availabilityWeek(
+  db: DatabaseSync,
+  serviceId: string,
+  from: string,
+  now = Date.now(),
+): AvailabilityWeek | null {
+  const calendar = bookableCalendar(db, serviceId);
+  if (!calendar) return null;
+  const { doctor, service } = calendar;
+  const today = localDay(now);
+  const lastDate = addCalendarDays(today, doctor.horizon_days);
+  const first = from < today ? today : from;
+  if (first > lastDate) return { days: [], lastDate, nextAvailable: null };
+  const start = new Date(first + "T00:00:00+02:00").toISOString();
+  const end = new Date(addCalendarDays(lastDate, 1) + "T00:00:00+02:00").toISOString();
+  const busy = many(
+    db,
+    `SELECT start_at AS start, busy_until AS end FROM appointment
+     WHERE doctor_id=? AND start_at<? AND busy_until>?
+     AND ${occupiesTime}
+     UNION ALL
+     SELECT start_at, end_at FROM time_block WHERE doctor_id=? AND start_at<? AND end_at>?`,
+    doctor.id, end, start, now, doctor.id, end, start,
+  );
+  function openSlots(day: string) {
+    const dayStart = new Date(day + "T00:00:00+02:00").toISOString();
+    const dayEnd = new Date(addCalendarDays(day, 1) + "T00:00:00+02:00").toISOString();
+    const intervals = busy.filter((period) => period.start < dayEnd && period.end > dayStart);
+    return candidateSlots(doctor, service, day, now).filter(
+      (slot) => !intervals.some((period) => period.start < slot.busyUntil && period.end > slot.start),
+    );
+  }
+  const days: AvailabilityWeek["days"] = [];
+  for (let index = 0; index < 7; index++) {
+    const day = addCalendarDays(first, index);
+    if (day > lastDate) break;
+    days.push({ date: day, slots: openSlots(day) });
+  }
+  let nextAvailable = null;
+  if (!days.some((day) => day.slots.length)) {
+    for (let day = addCalendarDays(first, 7); day <= lastDate; day = addCalendarDays(day, 1)) {
+      if (openSlots(day).length) {
+        nextAvailable = day;
+        break;
+      }
+    }
+  }
+  return { days, lastDate, nextAvailable };
 }
 export function conflict(
   db: DatabaseSync,
@@ -123,7 +179,7 @@ export function conflict(
     !!one(
       db,
       `SELECT id FROM appointment WHERE doctor_id=? AND id<>? AND start_at<? AND busy_until>?
-    AND (status IN('confirmed','completed','no_show') OR (status='hold' AND hold_until>?)) LIMIT 1`,
+    AND ${occupiesTime} LIMIT 1`,
       doctorId,
       excluding,
       busyUntil,
@@ -165,6 +221,9 @@ export function saveDoctor(
       720,
     );
   const onboarded = flag(input.onboarded);
+  const slotInterval = input.slotIntervalMinutes ?? doctor.slot_interval_minutes;
+  if (!bookingIntervals.some((interval) => interval === slotInterval))
+    fail(400, "Choose a supported appointment start interval.");
   if (
     onboarded &&
     (!hours.length ||
@@ -180,7 +239,7 @@ export function saveDoctor(
     );
   run(
     db,
-    "UPDATE doctor SET name=?,title=?,description=?,location=?,weekly_hours=?,min_notice_hours=?,horizon_days=?,cancellation_hours=?,onboarded=?,active=? WHERE id=?",
+    "UPDATE doctor SET name=?,title=?,description=?,location=?,weekly_hours=?,min_notice_hours=?,horizon_days=?,cancellation_hours=?,slot_interval_minutes=?,onboarded=?,active=? WHERE id=?",
     name,
     title,
     description,
@@ -189,6 +248,7 @@ export function saveDoctor(
     notice,
     horizon,
     cancellation,
+    slotInterval,
     onboarded,
     flag(input.active),
     doctor.id,

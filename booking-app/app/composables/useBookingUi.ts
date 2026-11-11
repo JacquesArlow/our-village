@@ -22,6 +22,14 @@ export function useBookingUi() {
     });
   const today = () =>
     new Date(Date.now() + 2 * 3600000).toISOString().slice(0, 10);
+  const dateLabel = (day: string, long = false) =>
+    new Intl.DateTimeFormat("en-ZA", {
+      timeZone: "Africa/Johannesburg",
+      weekday: long ? "long" : "short",
+      day: "numeric",
+      month: long ? "long" : "short",
+      year: long ? "numeric" : undefined,
+    }).format(new Date(day + "T12:00:00+02:00"));
   const dayOf = (iso: string) =>
     new Date(Date.parse(iso) + 2 * 3600000).toISOString().slice(0, 10);
   const toIso = (local: string) => new Date(local + ":00+02:00").toISOString();
@@ -45,6 +53,7 @@ export function useBookingUi() {
     when,
     clock,
     today,
+    dateLabel,
     dayOf,
     toIso,
     message,

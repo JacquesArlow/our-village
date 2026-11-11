@@ -21,6 +21,7 @@ export function migrateDomain(db: DatabaseSync) {
       active INTEGER NOT NULL DEFAULT 1 CHECK(active IN(0,1)), onboarded INTEGER NOT NULL DEFAULT 0 CHECK(onboarded IN(0,1)),
       weekly_hours TEXT NOT NULL DEFAULT '[]', min_notice_hours INTEGER NOT NULL DEFAULT 24,
       horizon_days INTEGER NOT NULL DEFAULT 60, cancellation_hours INTEGER NOT NULL DEFAULT 24,
+      slot_interval_minutes INTEGER NOT NULL DEFAULT 15 CHECK(slot_interval_minutes IN(5,10,15,20,30,60)),
       created_at INTEGER NOT NULL
     );
     CREATE TABLE IF NOT EXISTS service (
@@ -78,6 +79,9 @@ export function migrateDomain(db: DatabaseSync) {
     const columns = db.prepare("PRAGMA table_info(invoice)").all();
     if (!columns.some((column) => column.name === "payment_mode"))
       db.exec("ALTER TABLE invoice ADD COLUMN payment_mode TEXT NOT NULL DEFAULT 'test' CHECK(payment_mode IN('test','live'))");
+    const doctorColumns = db.prepare("PRAGMA table_info(doctor)").all();
+    if (!doctorColumns.some((column) => column.name === "slot_interval_minutes"))
+      db.exec("ALTER TABLE doctor ADD COLUMN slot_interval_minutes INTEGER NOT NULL DEFAULT 15 CHECK(slot_interval_minutes IN(5,10,15,20,30,60))");
   });
 }
 

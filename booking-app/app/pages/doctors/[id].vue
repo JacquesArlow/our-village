@@ -1,87 +1,132 @@
 <script setup lang="ts">
+import { addCalendarDays, type AvailabilityWeek, type CalendarSlot } from "~~/shared/calendar";
+
 const doctorPhoto = useBookingPath("/natasha.webp");
 const bookingFetch = useBookingRequest();
-const route = useRoute(),
-  { account, refresh } = useAccount(),
-  { money, clock, today, message } = useBookingUi();
+const route = useRoute();
+const { account, refresh } = useAccount();
+const { money, clock, today, dateLabel, message } = useBookingUi();
 const { data: doctors, error: directoryError } = await useFetch<any[]>(
   useBookingPath("/api/public/doctors"),
 );
-const { data: config, refresh: refreshConfig } = await useFetch<any>(useBookingPath("/api/public/config"));
-const doctor = computed(() =>
-  doctors.value?.find((d) => d.id === route.params.id),
+const { data: config, refresh: refreshConfig } = await useFetch<any>(
+  useBookingPath("/api/public/config"),
 );
+const doctor = computed(() => doctors.value?.find((item) => item.id === route.params.id));
 if (directoryError.value) throw directoryError.value;
 if (!doctor.value)
   throw createError({ statusCode: 404, statusMessage: "Doctor not found" });
-const serviceId = ref(doctor.value.services[0]?.id || ""),
-  day = ref(today()),
-  busy = ref(false),
-  error = ref(""),
-  requestKey = ref("");
+
+const serviceId = ref(doctor.value.services[0]?.id || "");
+const firstDate = today();
+const weekFrom = ref(firstDate);
+const day = ref("");
+const selection = ref<{ slot: CalendarSlot; requestKey: string }>();
+const review = ref<HTMLElement>();
+const busy = ref(false);
+const error = ref("");
 const {
-  data: available,
-  refresh: refreshSlots,
+  data: availability,
+  refresh: refreshAvailability,
   status,
-} = await useFetch<any[]>(useBookingPath("/api/public/slots"), {
-  query: { serviceId, date: day },
-  immediate: !!serviceId.value,
-  watch: [serviceId, day],
+  error: availabilityError,
+} = await useFetch<AvailabilityWeek>(useBookingPath("/api/public/availability"), {
+  query: { serviceId, from: weekFrom },
 });
-const service = computed(() =>
-  doctor.value?.services.find((s: any) => s.id === serviceId.value),
+const service = computed(() => doctor.value?.services.find((item: any) => item.id === serviceId.value));
+const available = computed(
+  () => availability.value?.days.find((item) => item.date === day.value)?.slots || [],
 );
-watch([serviceId, day], () => {
-  requestKey.value = "";
+const timeGroups = computed(() => {
+  const groups: { label: string; slots: CalendarSlot[] }[] = [
+    { label: "Morning", slots: [] },
+    { label: "Afternoon", slots: [] },
+    { label: "Evening", slots: [] },
+  ];
+  for (const slot of available.value) {
+    const hour = (new Date(slot.start).getUTCHours() + 2) % 24;
+    groups[hour < 12 ? 0 : hour < 17 ? 1 : 2]!.slots.push(slot);
+  }
+  return groups.filter((group) => group.slots.length);
+});
+watch(serviceId, () => {
+  day.value = "";
+});
+watch(availability, (week) => {
+  if (week?.days.some((item) => item.date === day.value)) return;
+  day.value = week?.days.find((item) => item.slots.length)?.date ?? week?.days[0]?.date ?? "";
+}, { immediate: true });
+watch([serviceId, weekFrom, day], () => {
+  selection.value = undefined;
   error.value = "";
 });
-async function book(slot: any) {
+
+function shiftWeek(direction: number) {
+  const next = addCalendarDays(weekFrom.value, direction * 7);
+  day.value = "";
+  weekFrom.value = next < firstDate ? firstDate : next;
+}
+
+function jumpToDate(date: string) {
+  if (!date || date < firstDate || !availability.value || date > availability.value.lastDate) return;
+  day.value = date;
+  if (!availability.value.days.some((item) => item.date === date)) weekFrom.value = date;
+}
+
+async function selectSlot(slot: CalendarSlot) {
+  if (selection.value?.slot.start !== slot.start)
+    selection.value = { slot, requestKey: crypto.randomUUID() };
+  await nextTick();
+  review.value?.focus();
+}
+
+async function book() {
+  const selected = selection.value;
+  if (!selected || busy.value) return;
   busy.value = true;
   error.value = "";
   try {
     await refresh();
     if (!account.value) {
-      await navigateTo(
-        "/sign-in?next=" + encodeURIComponent("/doctors/" + doctor.value.id),
-      );
+      await navigateTo("/sign-in?next=" + encodeURIComponent(route.path));
       return;
     }
     if (account.value.user.role !== "patient") {
-      error.value =
-        "Use a patient account to book for yourself. Administrators can book for patients from the admin workspace.";
+      error.value = "Use a patient account to book for yourself. Administrators can book for patients from the admin workspace.";
       return;
     }
     if (!account.value.patient) {
-      await navigateTo(
-        "/account?next=" + encodeURIComponent("/doctors/" + doctor.value.id),
-      );
+      await navigateTo("/account?next=" + encodeURIComponent(route.path));
       return;
     }
-    requestKey.value ||= crypto.randomUUID();
     const result = await bookingFetch<any>("/api/appointments", {
       method: "POST",
       body: {
         serviceId: serviceId.value,
-        start: slot.start,
-        requestKey: requestKey.value,
+        start: selected.slot.start,
+        requestKey: selected.requestKey,
         paymentMode: config.value?.mode,
       },
     });
     await navigateTo("/invoices/" + result.invoice.id);
   } catch (e) {
     error.value = message(e);
-    await Promise.all([refreshSlots(), refreshConfig()]);
+    await Promise.all([refreshAvailability(), refreshConfig()]);
+    if (
+      (e as { statusCode?: number }).statusCode === 409 &&
+      !available.value.some((slot) => slot.start === selected.slot.start)
+    ) selection.value = undefined;
   } finally {
     busy.value = false;
   }
 }
 </script>
+
 <template>
   <section v-if="doctor" class="wrap section">
     <NuxtLink to="/#doctors" class="back-link">← All doctors</NuxtLink>
     <div class="section-heading">
       <div>
-        <p class="eyebrow">Your doctor’s calendar</p>
         <h1>{{ doctor.name }}</h1>
         <p class="role">{{ doctor.title }}</p>
       </div>
@@ -96,54 +141,107 @@ async function book(slot: any) {
           class="profile-photo"
         />
         <p>{{ doctor.description }}</p>
-        <p class="notice">
-          All appointment times are SAST (UTC+02:00).
-          <template v-if="config?.mode === 'test'">Payments are in test mode.</template>
-        </p>
       </aside>
-      <div class="panel">
-        <template v-if="doctor.services.length"
-          ><h2>Choose your appointment</h2>
-          <label
-            >Appointment type<select v-model="serviceId">
-              <option v-for="s in doctor.services" :key="s.id" :value="s.id">
-                {{ s.name }} · {{ s.duration_minutes }} min ·
-                {{ money(s.amount_cents) }}
-              </option>
-            </select></label
-          ><label
-            >Date<input v-model="day" type="date" :min="today()" required
-          /></label>
-          <p v-if="service" class="muted">
-            {{ service.duration_minutes }} minutes ·
-            {{ money(service.amount_cents) }} · payment is needed to confirm the
-            reserved slot.
-          </p>
-          <p v-if="error" class="notice error" role="alert">{{ error }}</p>
-          <p v-if="status === 'pending'" role="status">
-            Loading available times…
-          </p>
-          <div v-else-if="available?.length" class="slot-grid">
+      <div class="panel booking-calendar">
+        <h2>Book an appointment</h2>
+        <label for="appointment-type">Appointment type</label>
+        <select id="appointment-type" v-model="serviceId" :disabled="busy">
+          <option v-for="item in doctor.services" :key="item.id" :value="item.id">
+            {{ item.name }} · {{ item.duration_minutes }} min · {{ money(item.amount_cents) }}
+          </option>
+        </select>
+        <p class="hint">
+          All times are SAST. <template v-if="config?.mode === 'test'">Payments are in test mode.</template>
+        </p>
+        <div class="booking-calendar-heading">
+          <h3>Choose a date</h3>
+          <div class="actions">
             <button
-              v-for="slot in available"
-              :key="slot.start"
-              class="slot"
+              type="button"
+              class="button small secondary"
+              :disabled="busy || status === 'pending' || weekFrom <= firstDate"
+              @click="shiftWeek(-1)"
+            >← Previous week</button>
+            <button
+              type="button"
+              class="button small secondary"
+              :disabled="busy || status === 'pending' || !availability || addCalendarDays(weekFrom, 7) > availability.lastDate"
+              @click="shiftWeek(1)"
+            >Next week →</button>
+          </div>
+        </div>
+        <p v-if="status === 'pending'" class="notice" role="status">Loading available times…</p>
+        <p v-else-if="availabilityError" class="notice error" role="alert">
+          {{ message(availabilityError) }}
+          <button type="button" class="button small ghost" @click="refreshAvailability()">Try again</button>
+        </p>
+        <template v-else-if="availability">
+          <div class="booking-days" role="group" aria-label="Appointment dates">
+            <button
+              v-for="item in availability.days"
+              :key="item.date"
+              type="button"
+              class="booking-day"
+              :class="{ 'is-selected': item.date === day, 'has-slots': item.slots.length }"
               :disabled="busy"
-              @click="book(slot)"
+              :aria-pressed="item.date === day"
+              @click="day = item.date"
             >
-              {{ clock(slot.start)
-              }}<small>{{ busy ? "Please wait" : "Reserve time" }}</small>
+              <strong>{{ dateLabel(item.date) }}</strong>
+              <small>{{ item.slots.length ? item.slots.length + (item.slots.length === 1 ? ' time' : ' times') : 'No times' }}</small>
             </button>
           </div>
-          <div v-else class="empty">
-            No available times on this date. Try another date or appointment
-            type.
+          <div class="calendar-jump">
+            <label for="appointment-date">Jump to date</label>
+            <input
+              id="appointment-date"
+              type="date"
+              :value="day"
+              :min="firstDate"
+              :max="availability.lastDate"
+              :disabled="busy"
+              @change="jumpToDate(($event.target as HTMLInputElement).value)"
+            />
           </div>
-          <p class="hint">
-            Choosing a slot reserves it for 15 minutes. It is confirmed only
-            after payment is verified.
-          </p></template
-        >
+          <div class="booking-times">
+            <h3 v-if="day">{{ dateLabel(day, true) }}</h3>
+            <div v-if="!available.length" class="empty">
+              <p>{{ day ? 'No available times on this date.' : 'No further dates are open for booking.' }}</p>
+              <button
+                v-if="availability.nextAvailable"
+                type="button"
+                class="button small secondary"
+                :disabled="busy"
+                @click="jumpToDate(availability.nextAvailable)"
+              >Next available · {{ dateLabel(availability.nextAvailable) }}</button>
+            </div>
+            <section v-for="group in timeGroups" :key="group.label" class="booking-time-group">
+              <h4>{{ group.label }}</h4>
+              <div class="slot-grid" role="group" :aria-label="group.label + ' appointment times'">
+                <button
+                  v-for="slot in group.slots"
+                  :key="slot.start"
+                  type="button"
+                  class="slot"
+                  :class="{ 'is-selected': selection?.slot.start === slot.start }"
+                  :aria-pressed="selection?.slot.start === slot.start"
+                  :disabled="busy"
+                  @click="selectSlot(slot)"
+                >{{ clock(slot.start) }}</button>
+              </div>
+            </section>
+          </div>
+        </template>
+        <p v-if="error" class="notice error" role="alert">{{ error }}</p>
+        <section v-if="selection && service" class="booking-review" aria-labelledby="booking-review-title">
+          <h3 id="booking-review-title" ref="review" tabindex="-1">Review your appointment</h3>
+          <p>{{ service.name }} · {{ dateLabel(day, true) }} · {{ clock(selection.slot.start) }} SAST</p>
+          <p>{{ service.duration_minutes }} minutes · {{ money(service.amount_cents) }}</p>
+          <p class="hint">Continue to hold this time for 15 minutes while you pay.</p>
+          <button type="button" class="button" :disabled="busy" @click="book()">
+            {{ busy ? 'Reserving…' : 'Reserve and continue' }}
+          </button>
+        </section>
       </div>
     </div>
   </section>

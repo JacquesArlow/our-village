@@ -6,6 +6,15 @@ const { account, refresh: refreshAccount } = useAccount(),
   route = useRoute();
 const { data, refresh } = await useFetch<any>(useBookingPath("/api/patient/dashboard"));
 const { data: config } = await useFetch<any>(useBookingPath("/api/public/config"));
+const appointments = computed(() => data.value?.appointments || []);
+const upcoming = computed(() => appointments.value.filter(
+  (row: any) => (row.status === "payment_review" ||
+    (["hold", "confirmed"].includes(row.status) && Date.parse(row.end_at) > Date.now())),
+).sort((a: any, b: any) => a.start_at.localeCompare(b.start_at)));
+const history = computed(() => {
+  const current = new Set(upcoming.value.map((row: any) => row.id));
+  return appointments.value.filter((row: any) => !current.has(row.id));
+});
 const form = reactive({
     phone: account.value?.patient?.phone || "",
     consent: false,
@@ -44,11 +53,15 @@ async function save() {
     </p>
     <div class="dashboard-grid">
       <div>
-        <h2>Appointments</h2>
+        <h2>Upcoming appointments</h2>
         <AppointmentList
-          :records="data?.appointments || []"
+          :records="upcoming"
           @changed="refresh()"
         />
+        <details v-if="history.length" class="panel spaced appointment-history">
+          <summary>Past and cancelled appointments ({{ history.length }})</summary>
+          <AppointmentList :records="history" @changed="refresh()" />
+        </details>
         <h2 class="spaced">Your invoices</h2>
         <div class="list">
           <NuxtLink

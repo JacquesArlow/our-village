@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { bookingIntervals } from "~~/shared/calendar";
+
 const bookingFetch = useBookingRequest();
-const props = defineProps<{ doctorId?: string }>(),
-  { account } = useAccount(),
+const props = defineProps<{ doctorId?: string; initialStep: number }>(),
   { message, money } = useBookingUi();
 const {
   data,
@@ -9,7 +10,7 @@ const {
   error: loadError,
 } = await useFetch<any>(useBookingPath("/api/manage"), { query: { doctorId: props.doctorId } });
 const source = data.value?.doctor;
-const step = ref(1),
+const step = ref(source?.onboarded ? props.initialStep : 1),
   error = ref(""),
   saved = ref(""),
   busy = ref(false);
@@ -19,10 +20,11 @@ const model = reactive({
   description: source?.description || "",
   location: source?.location || "",
   active: !!source?.active,
-  weeklyHours: JSON.parse(source?.weekly_hours || "[]") as any[],
+  weeklyHours: JSON.parse(source?.weekly_hours || "[]") as { day: number; start: string; end: string }[],
   minNoticeHours: source?.min_notice_hours ?? 24,
   horizonDays: source?.horizon_days ?? 60,
   cancellationHours: source?.cancellation_hours ?? 24,
+  slotIntervalMinutes: source?.slot_interval_minutes ?? 15,
 });
 const type = reactive({
   id: "",
@@ -33,14 +35,57 @@ const type = reactive({
   active: true,
 });
 const days = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
+  { label: "Monday", value: 1 }, { label: "Tuesday", value: 2 },
+  { label: "Wednesday", value: 3 }, { label: "Thursday", value: 4 },
+  { label: "Friday", value: 5 }, { label: "Saturday", value: 6 },
+  { label: "Sunday", value: 0 },
+] as const;
+const calendarLink = "/doctor" + (props.doctorId ? "?doctorId=" + encodeURIComponent(props.doctorId) : "");
+const weekdayNumbers = [1, 2, 3, 4, 5];
+const mondayHours = computed(() => model.weeklyHours.filter((period) => period.day === 1));
+
+function setWeekdays() {
+  model.weeklyHours = weekdayNumbers.map((day) => ({ day, start: "09:00", end: "17:00" }));
+}
+
+function copyMonday() {
+  const weekdays = weekdayNumbers.slice(1);
+  if (
+    model.weeklyHours.some((period) => weekdays.includes(period.day)) &&
+    !window.confirm("Replace the draft hours for Tuesday to Friday with Monday’s hours?")
+  ) return;
+  model.weeklyHours = [
+    ...model.weeklyHours.filter((period) => !weekdays.includes(period.day)),
+    ...weekdays.flatMap((day) => mondayHours.value.map((period) => ({ ...period, day }))),
+  ];
+}
+
+function addPeriod(day: number) {
+  error.value = "";
+  const periods = model.weeklyHours.filter((period) => period.day === day);
+  if (!periods.length) {
+    model.weeklyHours.push({ day, start: "09:00", end: "17:00" });
+    return;
+  }
+  const minute = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3));
+  const time = (minutes: number) => new Date(minutes * 60000).toISOString().slice(11, 16);
+  const ordered = [...periods].sort((a, b) => a.start.localeCompare(b.start));
+  const after = Math.max(...ordered.map((period) => minute(period.end)));
+  if (after < 23 * 60 + 59) {
+    model.weeklyHours.push({ day, start: time(after), end: time(Math.min(after + 60, 1439)) });
+    return;
+  }
+  let start = 0;
+  for (const period of ordered) {
+    const end = minute(period.start);
+    if (end > start) {
+      model.weeklyHours.push({ day, start: time(Math.max(start, end - 60)), end: period.start });
+      return;
+    }
+    start = Math.max(start, minute(period.end));
+  }
+  error.value = "There is no free time to add another period on this day.";
+}
 function clearType() {
   Object.assign(type, {
     id: "",
@@ -100,10 +145,7 @@ async function save(publish = false, next = false) {
     await refreshNuxtData("public-doctors");
     saved.value = "Calendar settings saved.";
     if (publish)
-      await navigateTo(
-        "/doctor" +
-          (account.value.user.role === "admin" ? "?doctorId=" + source.id : ""),
-      );
+      await navigateTo(calendarLink);
     else if (next) step.value = Math.min(4, step.value + 1);
   } catch (e) {
     error.value = message(e);
@@ -126,13 +168,15 @@ function continueServices() {
     from the admin console.
   </div>
   <div v-else>
+    <NuxtLink v-if="source.onboarded" :to="calendarLink" class="back-link">← Doctor calendar</NuxtLink>
+    <h1>{{ source.onboarded ? 'Calendar settings' : 'Set up your calendar' }}</h1>
     <div class="setup-progress" aria-label="Setup progress">
       <button
         v-for="(label, index) in [
           'Profile',
           'Appointment types',
           'Working hours',
-          'Review & open',
+          source.onboarded ? 'Review' : 'Review & open',
         ]"
         :key="label"
         class="progress-step"
@@ -149,8 +193,7 @@ function continueServices() {
     <section v-if="step === 1" class="panel form-panel">
       <h2>Your professional profile</h2>
       <p>
-        Only you and practice administrators can change these settings. Bookings
-        remain closed until you open your calendar.
+        This profile appears in the booking directory when your calendar is open.
       </p>
       <label
         >Doctor name<input
@@ -173,12 +216,12 @@ function continueServices() {
           v-model="model.location"
           required
           maxlength="250" /></label
-      ><label class="check"
+      ><label v-if="!source.onboarded" class="check"
         ><input v-model="model.active" type="checkbox" /><span
           >Show this doctor in the booking directory after publishing</span
         ></label
-      ><button class="button" :disabled="busy" @click="save(false, true)">
-        Save draft &amp; continue
+      ><button class="button" :disabled="busy" @click="save(false, !source.onboarded)">
+        {{ source.onboarded ? 'Save profile' : 'Save draft & continue' }}
       </button>
     </section>
     <section v-if="step === 2" class="dashboard-grid">
@@ -273,26 +316,25 @@ function continueServices() {
         you take a break. A consultation and its buffer must fit inside a
         working period.
       </p>
-      <div v-for="(day, index) in days" :key="day" class="hours-day">
+      <div class="actions">
+        <button v-if="!model.weeklyHours.length" type="button" class="button small secondary" @click="setWeekdays">Use Monday–Friday, 09:00–17:00</button>
+        <button v-else-if="mondayHours.length" type="button" class="button small secondary" @click="copyMonday">Copy Monday to Tuesday–Friday</button>
+      </div>
+      <div v-for="day in days" :key="day.value" class="hours-day">
         <div class="row">
-          <strong>{{ day }}</strong
+          <strong>{{ day.label }}</strong
           ><button
             type="button"
             class="button small secondary"
-            @click="
-              model.weeklyHours.push({
-                day: index,
-                start: '09:00',
-                end: '17:00',
-              })
-            "
+            :aria-label="'Add period for ' + day.label"
+            @click="addPeriod(day.value)"
           >
             Add period
           </button>
         </div>
         <div
           v-for="(period, pi) in model.weeklyHours.filter(
-            (p) => p.day === index,
+            (p) => p.day === day.value,
           )"
           :key="pi"
           class="hours-period"
@@ -309,11 +351,18 @@ function continueServices() {
             Remove
           </button>
         </div>
-        <p v-if="!model.weeklyHours.some((p) => p.day === index)" class="hint">
+        <p v-if="!model.weeklyHours.some((p) => p.day === day.value)" class="hint">
           Not working
         </p>
       </div>
-      <div class="three-cols">
+      <h3>Booking rules</h3>
+      <div class="two-cols">
+        <div>
+          <label for="calendar-slot-interval">Offer an appointment start every</label>
+          <select id="calendar-slot-interval" v-model.number="model.slotIntervalMinutes">
+            <option v-for="interval in bookingIntervals" :key="interval" :value="interval">{{ interval }} minutes</option>
+          </select>
+        </div>
         <label
           >Minimum booking notice (hours)<input
             v-model.number="model.minNoticeHours"
@@ -334,17 +383,24 @@ function continueServices() {
             max="720"
         /></label>
       </div>
+      <label v-if="source.onboarded" class="check">
+        <input v-model="model.active" type="checkbox" />
+        Accept online bookings
+      </label>
+      <p v-if="source.onboarded && !model.active" class="hint">
+        Pausing closes online booking and rescheduling. Existing appointments stay on the calendar.
+      </p>
       <p class="hint">
         Review these practice policies before opening bookings. Paid
         cancellations are flagged for refund review; no automatic refund is
         promised or issued.
       </p>
-      <button class="button" :disabled="busy" @click="save(false, true)">
-        Save working hours &amp; continue
+      <button class="button" :disabled="busy" @click="save(false, !source.onboarded)">
+        {{ source.onboarded ? 'Save calendar settings' : 'Save working hours & continue' }}
       </button>
     </section>
     <section v-if="step === 4" class="panel form-panel">
-      <h2>Ready to open your calendar?</h2>
+      <h2>{{ source.onboarded ? 'Review calendar settings' : 'Ready to open your calendar?' }}</h2>
       <p>
         <strong>{{ model.name }}</strong> · {{ model.title }}<br />{{
           model.location
@@ -356,12 +412,10 @@ function continueServices() {
         period(s).
       </p>
       <p class="notice">
-        Opening this calendar publishes your configured fees and times on
-        private staging only. No emails will be sent. Yoco still needs the
-        client’s test credentials before actual gateway testing.
+        Patients can see available times and consultation prices when your calendar is open.
       </p>
       <div class="actions">
-        <button class="button" :disabled="busy" @click="save(true)">
+        <button v-if="!source.onboarded" class="button" :disabled="busy" @click="save(true)">
           Publish calendar</button
         ><button class="button secondary" :disabled="busy" @click="save(false)">
           Save settings

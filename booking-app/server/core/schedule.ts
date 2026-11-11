@@ -1,4 +1,5 @@
 import { date, fail, integer } from "./validation";
+import type { CalendarSlot } from "../../shared/calendar";
 
 export interface Hours {
   day: number;
@@ -50,13 +51,14 @@ export function candidateSlots(
   if (delta < 0 || delta > doctor.horizon_days) return [];
   const weekday = new Date(day + "T12:00:00+02:00").getUTCDay();
   const periods: Hours[] = JSON.parse(doctor.weekly_hours);
-  const result: { start: string; end: string; busyUntil: string }[] = [];
+  const result: CalendarSlot[] = [];
+  const interval = doctor.slot_interval_minutes ?? 15;
   for (const period of periods.filter((row) => row.day === weekday)) {
     for (
       let time = minute(period.start);
       time + service.duration_minutes + service.buffer_minutes <=
       minute(period.end);
-      time += 15
+      time += interval
     ) {
       const start = Date.parse(
         day +

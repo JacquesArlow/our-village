@@ -2,36 +2,47 @@
 const bookingFetch = useBookingRequest();
 const props = defineProps<{ records: any[]; staff?: boolean }>(),
   emit = defineEmits<{ changed: [] }>();
-const { when, money, clock, today, message, paidLabel } = useBookingUi();
+const { when, money, clock, today, dayOf, message, paidLabel } = useBookingUi();
 const editing = ref<any>(null),
   day = ref(today()),
   options = ref<any[]>([]),
   error = ref(""),
   busy = ref(false);
-async function begin(row: any) {
+const loading = ref(false);
+const slotError = ref("");
+let slotRequest = 0;
+function begin(row: any) {
   editing.value = row;
+  const date = dayOf(row.start_at);
+  day.value = date < today() ? today() : date;
   error.value = "";
-  await loadSlots();
 }
 async function loadSlots() {
-  error.value = "";
+  const request = ++slotRequest;
+  const row = editing.value;
+  options.value = [];
+  slotError.value = "";
+  loading.value = !!row && !!day.value;
+  if (!loading.value) return;
   try {
-    options.value = await bookingFetch<any[]>(
-      "/api/appointments/" + editing.value.id + "/slots",
+    const result = await bookingFetch<any[]>(
+      "/api/appointments/" + row.id + "/slots",
       { query: { date: day.value } },
     );
+    if (request === slotRequest)
+      options.value = result.filter((slot) => slot.start !== row.start_at);
   } catch (e) {
-    error.value = message(e);
+    if (request === slotRequest) slotError.value = message(e);
+  } finally {
+    if (request === slotRequest) loading.value = false;
   }
 }
-watch(day, () => {
-  if (editing.value) loadSlots();
-});
+watch([() => editing.value?.id, day], loadSlots);
 async function action(row: any, type: string, start?: string) {
   if (
     type === "cancel" &&
     !window.confirm(
-      "Cancel this appointment? If a test payment was recorded, the invoice will be flagged for refund review; no automatic refund is performed.",
+      "Cancel this appointment? If a payment was recorded, the invoice will be flagged for refund review.",
     )
   )
     return;
@@ -46,6 +57,7 @@ async function action(row: any, type: string, start?: string) {
     emit("changed");
   } catch (e) {
     error.value = message(e);
+    if (type === "reschedule") await loadSlots();
   } finally {
     busy.value = false;
   }
@@ -119,7 +131,9 @@ async function action(row: any, type: string, start?: string) {
         <label
           >New date<input v-model="day" type="date" :min="today()"
         /></label>
-        <div class="slot-grid">
+        <p v-if="loading" role="status">Loading available times…</p>
+        <p v-else-if="slotError" class="notice error" role="alert">{{ slotError }}</p>
+        <div v-else-if="options.length" class="slot-grid">
           <button
             v-for="slot in options"
             :key="slot.start"
@@ -130,7 +144,7 @@ async function action(row: any, type: string, start?: string) {
             {{ clock(slot.start) }}
           </button>
         </div>
-        <p v-if="!options.length">No available times on this date.</p>
+        <p v-else-if="day">No available times on this date.</p>
         <button class="button small ghost" @click="editing = null">
           Close
         </button>

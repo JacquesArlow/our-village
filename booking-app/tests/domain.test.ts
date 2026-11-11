@@ -9,6 +9,7 @@ import {
   one,
   run,
   slots,
+  availabilityWeek,
   publishedDoctors,
   createAppointment,
   appointmentFor,
@@ -239,6 +240,40 @@ describe("doctor setup and scheduling", () => {
     expect(slots(db, "natasha-service", "2026-11-03", now)[0].start).toBe(
       "2026-11-03T08:00:00.000Z",
     );
+  });
+  it("shows the same slots in a week as in a day and skips to the next bookable date", () => {
+    const first = book();
+    const week = availabilityWeek(db, "natasha-service", "2026-11-02", now)!;
+    expect(week.days).toHaveLength(7);
+    expect(week.days[1]?.slots).toEqual(slots(db, "natasha-service", "2026-11-03", now));
+    expect(week.days[1]?.slots[0]?.start).toBe(first.appointment.busy_until);
+    const afterHold = now + 16 * 60000;
+    addBlock(db, doc, "natasha", {
+      start: "2026-11-02T22:00:00.000Z",
+      end: "2026-11-03T22:00:00.000Z",
+    }, afterHold);
+    const blocked = availabilityWeek(db, "natasha-service", "2026-11-02", afterHold)!;
+    expect(blocked.days.every((day) => !day.slots.length)).toBe(true);
+    expect(blocked.nextAvailable).toBe("2026-11-10");
+    run(db, "UPDATE doctor SET horizon_days=1 WHERE id='natasha'");
+    const limited = availabilityWeek(db, "natasha-service", "2026-11-02", afterHold)!;
+    expect(limited.days).toHaveLength(2);
+    expect(limited.nextAvailable).toBeNull();
+  });
+  it("migrates a 15-minute default and applies a doctor's chosen start interval", () => {
+    db.exec("ALTER TABLE doctor DROP COLUMN slot_interval_minutes");
+    migrateDomain(db);
+    expect(one(db, "SELECT slot_interval_minutes FROM doctor WHERE id='natasha'").slot_interval_minutes).toBe(15);
+    const settings = {
+      name: "Doctor", title: "GP", location: "Our Village",
+      weeklyHours: [{ day: 2, start: "09:00", end: "12:00" }],
+      minNoticeHours: 0, horizonDays: 60, cancellationHours: 24,
+      onboarded: true, active: true,
+    };
+    saveDoctor(db, doc, "natasha", { ...settings, slotIntervalMinutes: 30 });
+    saveDoctor(db, doc, "natasha", settings);
+    expect(slots(db, "natasha-service", "2026-11-03", now)[1]?.start).toBe("2026-11-03T07:30:00.000Z");
+    expect(() => saveDoctor(db, doc, "natasha", { ...settings, slotIntervalMinutes: 7 })).toThrow();
   });
 });
 
