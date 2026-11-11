@@ -2,12 +2,13 @@
 
 The `staging` branch runs the booking pilot at
 `https://staging.our-village.co.za` and the private live-domain workspaces.
-Staff enter through `/village-desk` and patients sign in at `/booking/login`.
+Staff enter through `/village-desk`. Visitors browse doctor calendars at
+`/booking/` and sign in or register before reserving a time.
 Both use the same account database and enforce their audience on the server.
 
 ## Included in this pilot
 
-- Patient signup on staging, sign-in, contact consent, appointment holds, rescheduling,
+- Patient registration, sign-in, contact consent, appointment holds, rescheduling,
   cancellation, private invoices and payment links.
 - Doctor first-login password change and a four-step onboarding wizard: profile,
   appointment types/prices/buffers, weekly working periods and publishing.
@@ -111,9 +112,10 @@ Cloudflare source restrictions, strict TLS and no-index/no-cache headers apply.
 They share the mode-0600 `.env.booking-preview` and the
 `ourvillage-booking-preview_booking_data` volume. Provision the initial named
 administrator with `BOOKING_ADMIN_*` and a separate `BETTER_AUTH_SECRET`, then
-create additional accounts in the admin panel. The live preview rejects reserved
-test addresses and public sign-ups. Both services validate the same host-only
-session cookie and restrict the workspace by role. The Desk additionally reads
+create staff accounts in the admin panel. Patient registration is available at
+`/booking/sign-up` and rejects reserved test addresses on the live host. Both
+services validate the same host-only session cookie and restrict the workspace
+by role. The Desk additionally reads
 `.env.booking-desk` for Turnstile. The existing event planner validates the Desk
 session over the internal `ourvillage-desk-auth` network.
 The public-host preview defaults to **Test mode**. Administrators can change it

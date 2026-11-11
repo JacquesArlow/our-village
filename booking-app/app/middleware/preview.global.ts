@@ -1,17 +1,24 @@
 import { accountHome } from "~~/shared/accounts";
+import { isPublicBookingPage } from "~~/shared/booking-navigation";
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const config = useRuntimeConfig().public;
   if (!config.bookingLoginRequired) return;
-  if (["/login", "/sign-in"].includes(to.path.replace(/\/$/, ""))) return;
-  if (to.path.replace(/\/$/, "") === "/sign-up") return navigateTo("/login");
+  const path = to.path.replace(/\/$/, "") || "/";
+  const staff = config.bookingAudience === "staff";
+  if (["/login", "/sign-in"].includes(path)) return;
+  if (["/sign-up", "/register"].includes(path)) {
+    if (staff) return navigateTo("/login");
+    return;
+  }
 
   const { refresh } = useAccount();
   const account = await refresh();
+  if (account?.user.mustChangePassword && path !== "/change-password")
+    return navigateTo("/change-password");
+  if (!staff && isPublicBookingPage(path)) return;
   if (!account)
     return navigateTo({ path: "/login", query: { next: to.fullPath } });
-  if (account.user.mustChangePassword && to.path !== "/change-password")
-    return navigateTo("/change-password");
   if (config.bookingAudience === "staff" && to.path === "/")
     return navigateTo(accountHome(account.user.role));
   if (

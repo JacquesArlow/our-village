@@ -4,24 +4,30 @@ import { addCalendarDays, type AvailabilityWeek, type CalendarSlot } from "~~/sh
 const doctorPhoto = useBookingPath("/natasha.webp");
 const bookingFetch = useBookingRequest();
 const route = useRoute();
+const router = useRouter();
 const { account, refresh } = useAccount();
 const { money, clock, today, dateLabel, message } = useBookingUi();
 const { data: doctors, error: directoryError } = await useFetch<any[]>(
   useBookingPath("/api/public/doctors"),
-);
-const { data: config, refresh: refreshConfig } = await useFetch<any>(
-  useBookingPath("/api/public/config"),
 );
 const doctor = computed(() => doctors.value?.find((item) => item.id === route.params.id));
 if (directoryError.value) throw directoryError.value;
 if (!doctor.value)
   throw createError({ statusCode: 404, statusMessage: "Doctor not found" });
 
-const serviceId = ref(doctor.value.services[0]?.id || "");
 const firstDate = today();
-const weekFrom = ref(firstDate);
-const day = ref("");
-const selection = ref<{ slot: CalendarSlot; requestKey: string }>();
+const requestedService = doctor.value.services.find((item: any) => item.id === route.query.service);
+const serviceId = ref(requestedService?.id || doctor.value.services[0]?.id || "");
+const requestedDate = typeof route.query.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(route.query.date)
+  ? route.query.date
+  : "";
+const dateMs = Date.parse(requestedDate + "T00:00:00Z");
+const initialDate = Number.isFinite(dateMs) && new Date(dateMs).toISOString().slice(0, 10) === requestedDate && requestedDate >= firstDate
+  ? requestedDate
+  : "";
+const weekFrom = ref(initialDate || firstDate);
+const day = ref(initialDate);
+const selection = ref<{ slot: CalendarSlot; requestKey?: string }>();
 const review = ref<HTMLElement>();
 const busy = ref(false);
 const error = ref("");
@@ -56,10 +62,18 @@ watch(availability, (week) => {
   if (week?.days.some((item) => item.date === day.value)) return;
   day.value = week?.days.find((item) => item.slots.length)?.date ?? week?.days[0]?.date ?? "";
 }, { immediate: true });
+const restored = available.value.find((slot) => slot.start === route.query.start);
+if (restored) selection.value = { slot: restored };
+else if (typeof route.query.start === "string" && availability.value)
+  error.value = "That time is no longer available. Please choose another time.";
 watch([serviceId, weekFrom, day], () => {
   selection.value = undefined;
   error.value = "";
 });
+const returnToSlot = computed(() => router.resolve({
+  path: route.path,
+  query: { service: serviceId.value, date: day.value, start: selection.value?.slot.start },
+}).fullPath);
 
 function shiftWeek(direction: number) {
   const next = addCalendarDays(weekFrom.value, direction * 7);
@@ -75,7 +89,7 @@ function jumpToDate(date: string) {
 
 async function selectSlot(slot: CalendarSlot) {
   if (selection.value?.slot.start !== slot.start)
-    selection.value = { slot, requestKey: crypto.randomUUID() };
+    selection.value = { slot };
   await nextTick();
   review.value?.focus();
 }
@@ -88,7 +102,7 @@ async function book() {
   try {
     await refresh();
     if (!account.value) {
-      await navigateTo("/sign-in?next=" + encodeURIComponent(route.path));
+      await navigateTo({ path: "/sign-in", query: { next: returnToSlot.value } });
       return;
     }
     if (account.value.user.role !== "patient") {
@@ -96,22 +110,24 @@ async function book() {
       return;
     }
     if (!account.value.patient) {
-      await navigateTo("/account?next=" + encodeURIComponent(route.path));
+      await navigateTo({ path: "/account", query: { next: returnToSlot.value } });
       return;
     }
+    const config = await bookingFetch<{ mode: string }>("/api/public/config");
+    selected.requestKey ??= crypto.randomUUID();
     const result = await bookingFetch<any>("/api/appointments", {
       method: "POST",
       body: {
         serviceId: serviceId.value,
         start: selected.slot.start,
         requestKey: selected.requestKey,
-        paymentMode: config.value?.mode,
+        paymentMode: config.mode,
       },
     });
     await navigateTo("/invoices/" + result.invoice.id);
   } catch (e) {
     error.value = message(e);
-    await Promise.all([refreshAvailability(), refreshConfig()]);
+    await refreshAvailability();
     if (
       (e as { statusCode?: number }).statusCode === 409 &&
       !available.value.some((slot) => slot.start === selected.slot.start)
@@ -150,9 +166,7 @@ async function book() {
             {{ item.name }} · {{ item.duration_minutes }} min · {{ money(item.amount_cents) }}
           </option>
         </select>
-        <p class="hint">
-          All times are SAST. <template v-if="config?.mode === 'test'">Payments are in test mode.</template>
-        </p>
+        <p class="hint">All times are South African time (SAST).</p>
         <div class="booking-calendar-heading">
           <h3>Choose a date</h3>
           <div class="actions">
@@ -237,10 +251,19 @@ async function book() {
           <h3 id="booking-review-title" ref="review" tabindex="-1">Review your appointment</h3>
           <p>{{ service.name }} · {{ dateLabel(day, true) }} · {{ clock(selection.slot.start) }} SAST</p>
           <p>{{ service.duration_minutes }} minutes · {{ money(service.amount_cents) }}</p>
-          <p class="hint">Continue to hold this time for 15 minutes while you pay.</p>
-          <button type="button" class="button" :disabled="busy" @click="book()">
-            {{ busy ? 'Reserving…' : 'Reserve and continue' }}
-          </button>
+          <template v-if="account">
+            <p class="hint">Reserve this time to hold it for 15 minutes while you pay.</p>
+            <button type="button" class="button" :disabled="busy" @click="book()">
+              {{ busy ? 'Reserving…' : 'Reserve and continue' }}
+            </button>
+          </template>
+          <template v-else>
+            <p class="hint">Sign in or create a patient account to reserve this time.</p>
+            <div class="actions">
+              <NuxtLink :to="{ path: '/sign-up', query: { next: returnToSlot } }" class="button">Register to book</NuxtLink>
+              <NuxtLink :to="{ path: '/sign-in', query: { next: returnToSlot } }" class="button secondary">Sign in to book</NuxtLink>
+            </div>
+          </template>
         </section>
       </div>
     </div>

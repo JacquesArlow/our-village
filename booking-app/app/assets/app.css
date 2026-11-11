@@ -923,7 +923,8 @@ input[readonly] {
   .three-cols {
     grid-template-columns: 1fr;
   }
-  .booking-calendar {
+  .booking-calendar,
+  .booking-profile-first > aside {
     grid-row: 1;
   }
   .setup-progress {

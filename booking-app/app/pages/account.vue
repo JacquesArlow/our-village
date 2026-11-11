@@ -1,11 +1,16 @@
 <script setup lang="ts">
+import { bookingReturnPath, isDoctorCalendar } from "~~/shared/booking-navigation";
+
 const bookingFetch = useBookingRequest();
 definePageMeta({ middleware: "account" });
 const { account, refresh: refreshAccount } = useAccount(),
   { money, when, number, message, paidLabel } = useBookingUi(),
   route = useRoute();
 const { data, refresh } = await useFetch<any>(useBookingPath("/api/patient/dashboard"));
-const { data: config } = await useFetch<any>(useBookingPath("/api/public/config"));
+const returnToCalendar = computed(() => {
+  const path = bookingReturnPath(route.query.next);
+  return path && isDoctorCalendar(path.split(/[?#]/)[0]!) ? path : undefined;
+});
 const appointments = computed(() => data.value?.appointments || []);
 const upcoming = computed(() => appointments.value.filter(
   (row: any) => (row.status === "payment_review" ||
@@ -29,9 +34,7 @@ async function save() {
     await bookingFetch("/api/account/profile", { method: "POST", body: form });
     await refreshAccount();
     saved.value = true;
-    const next = route.query.next;
-    if (typeof next === "string" && next.startsWith("/doctors/"))
-      await navigateTo(next);
+    if (returnToCalendar.value) await navigateTo(returnToCalendar.value);
   } catch (e) {
     error.value = message(e);
   } finally {
@@ -48,10 +51,7 @@ async function save() {
       </div>
       <NuxtLink to="/" class="button">Book an appointment</NuxtLink>
     </div>
-    <p v-if="config?.mode === 'test'" class="notice">
-      Payments are in test mode. No money will be charged for test invoices.
-    </p>
-    <div class="dashboard-grid">
+    <div class="dashboard-grid" :class="{ 'booking-profile-first': returnToCalendar }">
       <div>
         <h2>Upcoming appointments</h2>
         <AppointmentList
@@ -91,8 +91,7 @@ async function save() {
         <form class="panel form-panel" @submit.prevent="save">
           <h2>Contact details</h2>
           <p class="hint">
-            Save a contact number before making your first booking. Do not
-            enter clinical notes or identity numbers.
+            {{ returnToCalendar ? "Save your contact number to return to your selected appointment." : "Save a contact number before making your first booking." }}
           </p>
           <label
             >Phone number<input

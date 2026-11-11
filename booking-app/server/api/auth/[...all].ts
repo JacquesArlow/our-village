@@ -1,6 +1,6 @@
 import { auth } from "../../core/auth";
 import { fail } from "../../core/validation";
-import { bookingRoute, livePreview } from "../../core/runtime";
+import { bookingRoute, staffDesk } from "../../core/runtime";
 
 export default defineEventHandler((event) => {
   const path = bookingRoute(getRequestURL(event).pathname).slice("/api/auth".length);
@@ -10,7 +10,7 @@ export default defineEventHandler((event) => {
     "/sign-out": ["POST"],
     "/get-session": ["GET"],
   };
-  if (!allowed[path]?.includes(event.method) || (livePreview && path === "/sign-up/email"))
-    fail(404, "Authentication route not available in this pilot.");
+  if (!allowed[path]?.includes(event.method) || (staffDesk && path === "/sign-up/email"))
+    fail(404, "Authentication route not available.");
   return auth.handler(toWebRequest(event));
 });

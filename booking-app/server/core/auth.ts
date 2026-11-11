@@ -71,9 +71,14 @@ export const auth = betterAuth({
   rateLimit: { enabled: true, window: 60, max: 30, storage: "database" },
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
-      if (ctx.path !== "/sign-in/email" || typeof ctx.body?.email !== "string")
-        return;
+      if (typeof ctx.body?.email !== "string") return;
       const email = ctx.body.email.trim().toLowerCase();
+      if (ctx.path === "/sign-up/email") {
+        if (livePreview && isTestAddress(email))
+          throw new APIError("BAD_REQUEST", { message: "Use an email address you can access." });
+        return;
+      }
+      if (ctx.path !== "/sign-in/email") return;
       const user = database()
         .prepare("SELECT disabledAt,role FROM user WHERE email=?")
         .get(email);

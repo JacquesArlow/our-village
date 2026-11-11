@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { accountHome } from "~~/shared/accounts";
+import { bookingReturnPath, isDoctorCalendar } from "~~/shared/booking-navigation";
 
 const bookingFetch = useBookingRequest();
 const props = defineProps<{ signup?: boolean }>();
 const config = useRuntimeConfig().public;
-const loginRequired = config.bookingLoginRequired;
 const staff = config.bookingAudience === "staff";
 const form = reactive({ name: "", email: "", password: "", consent: false }),
   busy = ref(false),
@@ -12,6 +12,7 @@ const form = reactive({ name: "", email: "", password: "", consent: false }),
 const { refresh } = useAccount(),
   { message } = useBookingUi(),
   route = useRoute();
+const next = computed(() => bookingReturnPath(route.query.next, staff));
 
 type Turnstile = {
   render: (target: HTMLElement, options: Record<string, unknown>) => string;
@@ -65,7 +66,7 @@ async function submit() {
     return;
   }
   if (props.signup && !form.consent) {
-    error.value = "Please accept the staging data notice.";
+    error.value = "Please acknowledge the privacy notice.";
     return;
   }
   busy.value = true;
@@ -82,28 +83,17 @@ async function submit() {
     const account = await refresh();
     if (!account)
       throw new Error("Sign-in could not be completed. Please try again.");
-    const next =
-      typeof route.query.next === "string" &&
-      /^\/(doctors\/|account(?:\?|$))/.test(route.query.next)
-        ? route.query.next
-        : "/account";
-    const previewNext =
-      typeof route.query.next === "string" &&
-      /^\/(?:$|(?:account|admin|doctor|doctors|invoices|pay|payment-return|reception)(?:[/?#]|$))/.test(
-        route.query.next,
-      ) &&
-      !route.query.next.includes("\\")
-        ? route.query.next
-        : null;
-    await navigateTo(
-      account.user.mustChangePassword
-        ? "/change-password"
-        : loginRequired && previewNext
-          ? previewNext
-          : account.user.role === "patient"
-            ? next
-            : accountHome(account.user.role),
-    );
+    if (account.user.mustChangePassword) {
+      await navigateTo("/change-password");
+      return;
+    }
+    const patient = account.user.role === "patient";
+    const destination = bookingReturnPath(next.value, !patient);
+    if (patient && !account.patient && destination && isDoctorCalendar(destination.split(/[?#]/)[0]!)) {
+      await navigateTo({ path: "/account", query: { next: destination } });
+      return;
+    }
+    await navigateTo(destination || accountHome(account.user.role));
   } catch (e) {
     error.value = message(e);
     if (staff && widgetId !== undefined) {
@@ -123,7 +113,7 @@ async function submit() {
         staff
           ? "Village Desk"
           : signup
-            ? "Your village starts here"
+            ? "Create a patient account"
             : "Patient sign-in"
       }}
     </h1>
@@ -133,9 +123,7 @@ async function submit() {
           ? "Create a patient account to manage appointments and invoices."
           : staff
             ? "Sign in to your staff workspace."
-            : loginRequired
-              ? "Sign in with your patient account to manage appointments."
-              : "Sign in to your booking workspace."
+            : "Sign in to book or manage an appointment."
       }}
     </p>
     <label v-if="signup"
@@ -169,8 +157,7 @@ async function submit() {
     </p>
     <label v-if="signup" class="check"
       ><input v-model="form.consent" type="checkbox" required /><span
-        >I understand this is private staging and will use test information
-        only. <NuxtLink to="/privacy">Read the data notice</NuxtLink>.</span
+        >I have read the <NuxtLink to="/privacy">privacy notice</NuxtLink>.</span
       ></label
     >
     <div v-if="staff" ref="widget"></div>
@@ -183,16 +170,15 @@ async function submit() {
         busy ? "Please wait…" : signup ? "Create patient account" : "Sign in"
       }}
     </button>
-    <p v-if="!loginRequired">
-      <NuxtLink :to="signup ? '/sign-in' : '/sign-up'">{{
+    <p v-if="!staff">
+      <NuxtLink :to="{ path: signup ? '/sign-in' : '/sign-up', query: { next } }">{{
         signup
           ? "Already registered? Sign in"
-          : "New here? Create a patient account"
+          : "New here? Register as a patient"
       }}</NuxtLink>
     </p>
-    <p class="hint">
-      No emails, verification messages or password-reset emails are sent in this
-      preview. Ask the testing administrator if you lose access.
-    </p>
+    <NuxtLink v-if="!staff" :to="next && isDoctorCalendar(next.split(/[?#]/)[0]!) ? next : '/'">
+      Browse doctor calendars
+    </NuxtLink>
   </form>
 </template>

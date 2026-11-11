@@ -185,8 +185,7 @@ async function copyPassword() {
         />
       </label>
       <p class="hint">
-        The user will change this password at their first sign-in. No email has
-        been sent.
+        Share these details securely. The user will change this password at their first sign-in.
       </p>
       <div class="actions">
         <button

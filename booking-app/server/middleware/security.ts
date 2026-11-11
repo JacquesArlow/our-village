@@ -1,4 +1,5 @@
 import { fail } from "../core/validation";
+import { isPublicBookingPage } from "../../shared/booking-navigation";
 import { sessionActor } from "../utils/access";
 import {
   appPrefix,
@@ -15,6 +16,7 @@ const guestPages = new Set([
   "/logo.png",
   "/favicon.ico",
 ]);
+const guestAvailability = new Set(["/api/public/doctors", "/api/public/availability"]);
 const receptionApis = new Set([
   "/api/me",
   "/api/reception/patients",
@@ -63,7 +65,7 @@ export default defineEventHandler(async (event) => {
       fail(403, "This action is outside reception access.");
     return;
   }
-  if (read && path === "/sign-up")
+  if (staffDesk && read && ["/sign-up", "/register"].includes(path))
     return sendRedirect(event, appPrefix + "/login", 302);
   const staffPage = /^\/(admin|doctor|reception)(\/|$)/.test(path);
   const patientPage = /^\/(account|doctors|pay|payment-return)(\/|$)/.test(
@@ -73,10 +75,11 @@ export default defineEventHandler(async (event) => {
     setResponseStatus(event, 404);
     return "Page not found.";
   }
-  if (path === "/api/auth/sign-up/email")
-    fail(404, "Account registration is closed for this preview.");
+  if (!staffDesk && read && (isPublicBookingPage(path) || guestAvailability.has(path))) return;
+  if (staffDesk && path === "/api/auth/sign-up/email")
+    fail(404, "Registration is available through patient booking.");
   if (read && (guestPages.has(path) || path.startsWith("/_nuxt/"))) return;
-  if (event.method === "POST" && path === "/api/auth/sign-in/email") return;
+  if (event.method === "POST" && ["/api/auth/sign-in/email", "/api/auth/sign-up/email"].includes(path)) return;
 
   const user = await sessionActor(event);
   if (user) {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const loginRequired = useRuntimeConfig().public.bookingLoginRequired;
+const { account } = useAccount();
 const doctorPhoto = useBookingPath("/natasha.webp");
 const { data: doctors, error } = await useFetch<any[]>(useBookingPath("/api/public/doctors"), {
   key: "public-doctors",
@@ -16,18 +16,13 @@ const { data: doctors, error } = await useFetch<any[]>(useBookingPath("/api/publ
       </p>
       <div v-if="doctors?.length" class="hero-actions">
         <a href="#doctors" class="button">Explore doctors</a
-        ><NuxtLink v-if="!loginRequired" to="/sign-up" class="button secondary"
-          >Create a patient account</NuxtLink
-        >
+        ><NuxtLink v-if="!account" to="/sign-up" class="button secondary">Register</NuxtLink>
       </div>
       <p v-else-if="error" class="notice error" role="alert">
         We couldn’t load online appointments. Please refresh and try again.
       </p>
       <p v-else class="lede">
-        Online appointments will open once a doctor publishes their calendar.
-      </p>
-      <p class="muted">
-        A private preview of Our Village’s new booking experience.
+        There are no appointments available online right now.
       </p>
     </div>
   </section>
@@ -37,7 +32,6 @@ const { data: doctors, error } = await useFetch<any[]>(useBookingPath("/api/publ
         <p class="eyebrow">Meet your care team</p>
         <h2>Choose your doctor</h2>
       </div>
-      <p>Online bookings open once each doctor has completed their setup.</p>
     </div>
     <div class="cards">
       <article v-for="doctor in doctors" :key="doctor.id" class="doctor-card">
@@ -95,15 +89,14 @@ const { data: doctors, error } = await useFetch<any[]>(useBookingPath("/api/publ
         <span class="step-number">03</span>
         <h3>A clear payment trail</h3>
         <p>
-          Secure hosted checkout when connected, with invoices and verified
-          payment updates.
+          View invoices and payment updates in your account.
         </p>
       </div>
     </div>
   </section>
   <section class="wrap section">
     <div class="notice">
-      <strong>This pilot is not an emergency service.</strong> Online bookings
+      <strong>Online booking is not an emergency service.</strong> Online bookings
       are not monitored for urgent medical needs. Please use your usual
       emergency or urgent-care service when immediate assistance is needed.
     </div>

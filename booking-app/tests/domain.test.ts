@@ -34,6 +34,7 @@ import { verifyWebhook, handlePaymentEvent, startCheckout } from "../server/core
 import { paymentMode } from "../server/core/payment-mode";
 import { instant } from "../server/core/validation";
 import { accountDirectory } from "../server/core/accounts";
+import { bookingReturnPath } from "../shared/booking-navigation";
 
 const now = Date.parse("2026-11-02T06:00:00Z"),
   start = "2026-11-03T07:00:00.000Z";
@@ -127,6 +128,15 @@ beforeEach(() => {
   }
 });
 afterEach(() => db.close());
+it("preserves a selected booking after sign-in and rejects unsafe return paths", () => {
+  const selection = "/doctors/dr-natasha-bartie?service=consultation&date=2026-11-12";
+  expect(bookingReturnPath(selection)).toBe(selection);
+  expect(bookingReturnPath("/doctor?doctorId=natasha", true)).toBe("/doctor?doctorId=natasha");
+  expect(bookingReturnPath("/doctor?doctorId=natasha")).toBeUndefined();
+  expect(bookingReturnPath("//unrelated.invalid/doctors/natasha")).toBeUndefined();
+  expect(bookingReturnPath("/doctors/../admin")).toBeUndefined();
+  expect(bookingReturnPath("/\\unrelated.invalid/doctors/natasha")).toBeUndefined();
+});
 const book = (who = patient, time = start, key = "request-one") =>
   createAppointment(
     db,

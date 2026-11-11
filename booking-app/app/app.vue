@@ -10,7 +10,7 @@ const route = useRoute();
 const loginPage = computed(() =>
   ["/login", "/sign-in"].includes(route.path.replace(/\/$/, "")),
 );
-const showWorkspace = computed(() => !loginRequired || !!account.value);
+const showWorkspace = computed(() => !staff || !loginRequired || !!account.value);
 const showDoctorDirectory = computed(
   () =>
     !staff &&
@@ -31,7 +31,7 @@ onMounted(() => {
 async function logout() {
   await bookingFetch("/api/auth/sign-out", { method: "POST", body: {} });
   account.value = null;
-  if (loginRequired)
+  if (staff)
     return navigateTo(loginPath, { external: true, replace: true });
   await navigateTo("/");
 }
@@ -71,7 +71,10 @@ async function logout() {
         <button v-if="account" class="button small ghost" @click="logout">
           Sign out
         </button>
-        <NuxtLink v-else to="/sign-in" class="button small">Sign in</NuxtLink>
+        <template v-else>
+          <NuxtLink to="/sign-in" class="button small secondary">Sign in</NuxtLink>
+          <NuxtLink v-if="!staff" to="/sign-up" class="button small">Register</NuxtLink>
+        </template>
       </nav>
     </header>
     <main id="main"><NuxtPage v-if="showWorkspace || loginPage" /></main>

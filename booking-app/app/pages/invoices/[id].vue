@@ -104,7 +104,7 @@ const copy = async () => {
             </p>
           </div>
           <div>
-            <span v-if="!liveInvoice" class="badge">TEST INVOICE</span>
+            <span v-if="!liveInvoice" class="badge">Test invoice · no charge</span>
             <h3>{{ number(data.invoice.seq, data.invoice.payment_mode) }}</h3>
             <p>Created {{ when(data.invoice.created_at) }}</p>
             <strong>{{ data.invoice.state.replaceAll("_", " ") }}</strong>
@@ -146,9 +146,6 @@ const copy = async () => {
         <p v-if="data.appointment?.status === 'hold'" class="notice">
           This slot is held until {{ when(data.appointment.hold_until) }}.
           Payment must be verified before the slot can be confirmed.
-        </p>
-        <p v-if="!liveInvoice" class="hint">
-          This invoice is for testing only. No money will be charged.
         </p>
       </article>
       <div class="panel spaced no-print">
