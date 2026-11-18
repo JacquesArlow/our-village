@@ -17,8 +17,8 @@ const DEFAULT_SITE: SiteConfig = {
   phoneHref: 'tel:+27798279327',
   whatsapp: '27798279327',
   email: 'reception@our-village.co.za',
-  address: '525 Alsation Drive, Garsfontein, Pretoria',
-  mapsUrl: 'https://maps.google.com/?q=525+Alsation+Drive+Garsfontein+Pretoria',
+  address: '525 Alsatian Drive, Garsfontein, Pretoria',
+  mapsUrl: 'https://maps.google.com/?q=525+Alsatian+Drive+Garsfontein+Pretoria',
   socials: {
     facebook: 'https://www.facebook.com/profile.php?id=61555393723146',
     instagram: 'https://www.instagram.com/our_village_pretoria/',

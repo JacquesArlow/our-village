@@ -256,13 +256,13 @@ export const team: TeamMember[] = [
   },
   {
     slug: 'rachael-anne-johnston',
-    name: 'Rachael Anne Johnston',
+    name: 'Racheal Anne Johnston',
     role: 'Social Worker | Play-Based Intervention',
     category: 'Emotional & Social Support',
     photo: img('rachael-anne-johnston'),
-    bookable: 'a session with Rachael Anne Johnston',
+    bookable: 'a session with Racheal Anne Johnston',
     tagline: 'Play-based intervention for children, teens and families.',
-    bio: 'Rachael is a Social Worker with over nine years of experience supporting children, teenagers and families through life’s challenges. Specialising in play-based intervention, she creates a safe and engaging environment where young people can express themselves, process difficult experiences and develop healthy emotional skills. Her holistic, family-centred approach — collaborating with parents, caregivers and teachers — helps children build resilience, strengthen relationships and navigate challenges with confidence.'
+    bio: 'Racheal is a Social Worker with over nine years of experience supporting children, teenagers and families through life’s challenges. Specialising in play-based intervention, she creates a safe and engaging environment where young people can express themselves, process difficult experiences and develop healthy emotional skills. Her holistic, family-centred approach — collaborating with parents, caregivers and teachers — helps children build resilience, strengthen relationships and navigate challenges with confidence.'
   },
   {
     slug: 'heidi-malan',

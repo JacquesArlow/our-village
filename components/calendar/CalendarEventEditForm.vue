@@ -211,7 +211,7 @@ const fmtBytes = (bytes: number | null) => bytes ? `${(bytes / 1024 / 1024).toFi
         <label class="min-w-0 text-sm">End time<input v-model="f.publicDetails.endTime" type="time" class="mt-1 block w-full min-w-0 rounded-field border border-base-300 px-3 py-2" /></label>
       </div>
       <label class="block text-sm">Venue<input v-model="f.publicDetails.venue" maxlength="250" class="mt-1 w-full rounded-field border border-base-300 px-3 py-2" placeholder="Our Village Training Space" /></label>
-      <label class="block text-sm">Address<input v-model="f.publicDetails.address" maxlength="250" class="mt-1 w-full rounded-field border border-base-300 px-3 py-2" placeholder="525 Alsation Drive, Garsfontein, Pretoria" /></label>
+      <label class="block text-sm">Address<input v-model="f.publicDetails.address" maxlength="250" class="mt-1 w-full rounded-field border border-base-300 px-3 py-2" placeholder="525 Alsatian Drive, Garsfontein, Pretoria" /></label>
       <label class="block text-sm">Presented by<input v-model="f.publicDetails.presenter" maxlength="250" class="mt-1 w-full rounded-field border border-base-300 px-3 py-2" /></label>
       <label class="block text-sm">Poster image link<input v-model="f.publicDetails.posterUrl" maxlength="1000" class="mt-1 w-full rounded-field border border-base-300 px-3 py-2" placeholder="https://… or /events/poster.webp" /></label>
     </fieldset>

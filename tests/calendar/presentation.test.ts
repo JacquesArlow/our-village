@@ -35,10 +35,10 @@ describe('event metadata', () => {
 
 describe('calendar downloads', () => {
   it('exports the actual South African session time in UTC', () => {
-    const text = buildEventIcs(event('cpr', '2026-10-31', { publicDetails: { startTime: '08:30', endTime: '12:00', venue: 'Our Village', address: '525 Alsation Drive' } }), 'https://www.our-village.co.za')
+    const text = buildEventIcs(event('cpr', '2026-10-31', { publicDetails: { startTime: '08:30', endTime: '12:00', venue: 'Our Village', address: '525 Alsatian Drive' } }), 'https://www.our-village.co.za')
     expect(text).toContain('DTSTART:20261031T063000Z\r\n')
     expect(text).toContain('DTEND:20261031T100000Z\r\n')
-    expect(text).toContain('LOCATION:Our Village\\, 525 Alsation Drive')
+    expect(text).toContain('LOCATION:Our Village\\, 525 Alsatian Drive')
   })
   it('exports date-only legacy events with an exclusive end date', () => {
     const text = buildEventIcs(event('week', '2026-10-30', { endDate: '2026-11-02' }), 'https://www.our-village.co.za')
