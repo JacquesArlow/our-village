@@ -64,6 +64,13 @@
       "when": 1792062689587,
       "tag": "0008_boring_domino",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1794987380445,
+      "tag": "0010_correct_alsatian_address",
+      "breakpoints": true
     }
   ]
 }

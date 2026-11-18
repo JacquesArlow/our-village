@@ -22,7 +22,7 @@ useHead({
           email: site.email,
           address: {
             '@type': 'PostalAddress',
-            streetAddress: '525 Alsation Drive',
+            streetAddress: '525 Alsatian Drive',
             addressLocality: 'Garsfontein',
             addressRegion: 'Gauteng',
             addressCountry: 'ZA'
