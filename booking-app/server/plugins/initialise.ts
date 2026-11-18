@@ -129,7 +129,7 @@ export default defineNitroPlugin(async () => {
         "Dr Natasha Bartie",
         "General Practitioner",
         "Compassionate family medical care at Our Village.",
-        "Our Village, 525 Alsation Drive, Garsfontein, Pretoria",
+        "Our Village, 525 Alsatian Drive, Garsfontein, Pretoria",
         Date.now(),
       );
   }

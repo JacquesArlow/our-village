@@ -70,7 +70,10 @@ export function migrateDomain(db: DatabaseSync) {
       detail TEXT NOT NULL DEFAULT '', created_at INTEGER NOT NULL
     );
     CREATE TABLE IF NOT EXISTS practice_setting (id INTEGER PRIMARY KEY CHECK(id=1), value TEXT NOT NULL);
-    INSERT OR IGNORE INTO practice_setting(id,value) VALUES(1,'{"name":"Our Village","address":"525 Alsation Drive, Garsfontein, Pretoria","registrationNumber":"","vatNumber":"","taxMode":"not_configured"}');
+    INSERT OR IGNORE INTO practice_setting(id,value) VALUES(1,'{"name":"Our Village","address":"525 Alsatian Drive, Garsfontein, Pretoria","registrationNumber":"","vatNumber":"","taxMode":"not_configured"}');
+    UPDATE practice_setting SET value=json_set(value, '$.address', replace(json_extract(value, '$.address'), 'Alsation', 'Alsatian'))
+      WHERE json_extract(value, '$.address') LIKE '%Alsation%';
+    UPDATE doctor SET location=replace(location, 'Alsation', 'Alsatian') WHERE location LIKE '%Alsation%';
     CREATE TABLE IF NOT EXISTS payment_setting (id INTEGER PRIMARY KEY CHECK(id=1), mode TEXT NOT NULL CHECK(mode IN('test','live')));
     INSERT OR IGNORE INTO payment_setting(id,mode) VALUES(1,'test');
     CREATE TABLE IF NOT EXISTS rate_limit (key TEXT PRIMARY KEY, window_at INTEGER NOT NULL, count INTEGER NOT NULL);
