@@ -30,6 +30,7 @@ const year = 2026
           <li><NuxtLink to="/antenatal-classes/online-antenatal-classes" class="hover:text-primary">Online Antenatal Classes</NuxtLink></li>
           <li><NuxtLink to="/antenatal-classes/inperson-antenatal" class="hover:text-primary">In-Person Antenatal Classes</NuxtLink></li>
           <li><NuxtLink to="/contact-us" class="hover:text-primary">Contact Us</NuxtLink></li>
+          <li><a :href="site.shopUrl" class="btn btn-primary btn-sm mt-1 rounded-full font-semibold normal-case" aria-label="Shop JanaS online">Shop</a></li>
         </ul>
       </div>
 

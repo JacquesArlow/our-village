@@ -109,16 +109,23 @@ usePageSeo({
             </div>
           </NuxtLink>
         </div>
-        <section aria-labelledby="janas-boutique-title" class="mt-12 flex flex-col items-start gap-6 rounded-3xl border border-primary/25 bg-base-200 p-7 sm:flex-row sm:items-center sm:justify-between sm:p-9">
-          <div class="max-w-2xl">
-            <h2 id="janas-boutique-title" class="font-display text-2xl font-bold text-secondary">JanaS Ladies Boutique</h2>
-            <p class="mt-3 leading-relaxed text-base-content/75">
-              Discover thoughtful finds for mums, babies and little ones at JanaS, right here at Our Village.
-              Browse the full collection online.
-            </p>
-          </div>
-          <a href="https://www.janas.co.za/" class="btn btn-primary shrink-0 rounded-full font-semibold normal-case" aria-label="Shop now at JanaS Ladies Boutique">Shop now</a>
-        </section>
+      </div>
+    </section>
+
+    <section id="janas" aria-labelledby="janas-boutique-title" class="section-y scroll-mt-24 border-t border-base-200 bg-[#fffaf2]">
+      <div class="container-px grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
+        <div class="overflow-hidden rounded-3xl">
+          <img src="/shop/janas-boutique.jpg" alt="The JanaS team welcoming visitors to their boutique" width="960" height="640" loading="lazy" class="aspect-[3/2] w-full object-cover" />
+        </div>
+        <div>
+          <img src="/shop/janas-logo.jpg" alt="JanaS" width="640" height="283" loading="lazy" class="mb-5 h-20 w-auto mix-blend-multiply sm:h-24" />
+          <h2 id="janas-boutique-title" class="font-display text-3xl font-bold text-secondary sm:text-4xl">JanaS Ladies Boutique</h2>
+          <p class="mt-5 max-w-xl text-lg leading-relaxed text-base-content/75">
+            Discover thoughtful finds for mums, babies and little ones at JanaS, right here at Our Village.
+            Browse the full collection online.
+          </p>
+          <a :href="site.shopUrl" class="btn btn-primary mt-7 rounded-full font-semibold normal-case" aria-label="Shop now at JanaS Ladies Boutique">Shop now</a>
+        </div>
       </div>
     </section>
 

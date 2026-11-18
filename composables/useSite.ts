@@ -7,6 +7,7 @@ export interface SiteConfig {
   email: string
   address: string
   mapsUrl: string
+  shopUrl: string
   socials: { facebook: string; instagram: string; youtube: string }
 }
 
@@ -19,6 +20,7 @@ const DEFAULT_SITE: SiteConfig = {
   email: 'reception@our-village.co.za',
   address: '525 Alsatian Drive, Garsfontein, Pretoria',
   mapsUrl: 'https://maps.google.com/?q=525+Alsatian+Drive+Garsfontein+Pretoria',
+  shopUrl: 'https://www.janas.co.za/',
   socials: {
     facebook: 'https://www.facebook.com/profile.php?id=61555393723146',
     instagram: 'https://www.instagram.com/our_village_pretoria/',

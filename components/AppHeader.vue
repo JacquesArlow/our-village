@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const open = ref(false)
+const site = useSite()
 const route = useRoute()
 watch(() => route.fullPath, () => (open.value = false))
 
@@ -26,11 +27,12 @@ const links = [
           v-for="l in links"
           :key="l.to"
           :to="l.to"
-          class="rounded-full px-4 py-2 text-sm font-semibold text-base-content/75 transition-colors hover:bg-base-200 hover:text-secondary"
+          class="rounded-full px-3 py-2 text-sm font-semibold text-base-content/75 transition-colors hover:bg-base-200 hover:text-secondary"
           active-class="!text-secondary"
         >
           {{ l.label }}
         </NuxtLink>
+        <a :href="site.shopUrl" class="btn btn-primary btn-sm ml-2 rounded-full font-semibold normal-case" aria-label="Shop JanaS online">Shop</a>
       </nav>
 
       <div class="hidden lg:block">
@@ -71,6 +73,7 @@ const links = [
           >
             {{ l.label }}
           </NuxtLink>
+          <a :href="site.shopUrl" class="btn btn-primary mt-2 rounded-full font-semibold normal-case" aria-label="Shop JanaS online">Shop</a>
           <WhatsAppButton class="mt-2" block />
         </nav>
       </div>
