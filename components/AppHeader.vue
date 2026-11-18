@@ -32,7 +32,7 @@ const links = [
         >
           {{ l.label }}
         </NuxtLink>
-        <a :href="site.shopUrl" class="btn btn-primary btn-sm ml-2 rounded-full font-semibold normal-case" aria-label="Shop JanaS online">Shop</a>
+        <a :href="site.shopUrl" class="rounded-full px-3 py-2 text-sm font-semibold text-base-content/75 transition-colors hover:bg-base-200 hover:text-secondary" aria-label="Shop JanaS online">Shop</a>
       </nav>
 
       <div class="hidden lg:block">
@@ -73,7 +73,7 @@ const links = [
           >
             {{ l.label }}
           </NuxtLink>
-          <a :href="site.shopUrl" class="btn btn-primary mt-2 rounded-full font-semibold normal-case" aria-label="Shop JanaS online">Shop</a>
+          <a :href="site.shopUrl" class="rounded-xl px-4 py-3 font-semibold text-base-content/80 hover:bg-base-200" aria-label="Shop JanaS online">Shop</a>
           <WhatsAppButton class="mt-2" block />
         </nav>
       </div>
