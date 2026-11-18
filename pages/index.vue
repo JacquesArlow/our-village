@@ -98,7 +98,7 @@ usePageSeo({
           <NuxtLink
             v-for="c in serviceCategories"
             :key="c.key"
-            to="/our-services"
+            :to="{ path: '/our-services', hash: '#' + c.key }"
             class="group relative overflow-hidden rounded-3xl shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
           >
             <img :src="c.image" :alt="c.title" class="aspect-[3/2] w-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -109,6 +109,16 @@ usePageSeo({
             </div>
           </NuxtLink>
         </div>
+        <section aria-labelledby="janas-boutique-title" class="mt-12 flex flex-col items-start gap-6 rounded-3xl border border-primary/25 bg-base-200 p-7 sm:flex-row sm:items-center sm:justify-between sm:p-9">
+          <div class="max-w-2xl">
+            <h2 id="janas-boutique-title" class="font-display text-2xl font-bold text-secondary">JanaS Ladies Boutique</h2>
+            <p class="mt-3 leading-relaxed text-base-content/75">
+              Discover thoughtful finds for mums, babies and little ones at JanaS, right here at Our Village.
+              Browse the full collection online.
+            </p>
+          </div>
+          <a href="https://www.janas.co.za/" class="btn btn-primary shrink-0 rounded-full font-semibold normal-case" aria-label="Shop now at JanaS Ladies Boutique">Shop now</a>
+        </section>
       </div>
     </section>
 
